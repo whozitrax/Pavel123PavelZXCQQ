@@ -727,16 +727,8 @@ async def index_handler(request: web.Request):
 
 
 async def verification_handler(request: web.Request):
-    verification_file = Path(__file__).resolve().parent / "verification.txt"
-
-    if not verification_file.is_file():
-        return web.Response(
-            status=404,
-            text="Not Found",
-        )
-
     return web.Response(
-        text=verification_file.read_text(encoding="utf-8").strip(),
+        text="b0ffe7ed5c8e892dbde8c1f6b4f639b0d11c1bc7",
         content_type="text/plain",
     )
 
