@@ -1,0 +1,3465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PLAYEROK</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050914;
+    --bg-elev:#0b1222;
+    --bg-elev2:#101a2f;
+    --border:#1b2a45;
+    --text:#f4f5f9;
+    --text-dim:#8d90a3;
+    --text-dim2:#5f6274;
+    --accent1:#2f7cff;
+    --accent2:#6d4aff;
+    --grad: linear-gradient(135deg, var(--accent1) 0%, var(--accent2) 100%);
+    --green:#34d399;
+    --red:#f0555f;
+    --amber:#f2b84b;
+    --radius-lg:26px;
+    --radius-md:18px;
+    --radius-sm:12px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    height:100%;}
+  #app{max-width:460px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+    background:var(--bg);position:relative;}
+
+  /* top bar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px 10px;}
+  .brand{display:flex;align-items:center;gap:9px;font-family:"Montserrat",sans-serif;font-weight:900;font-size:20px;letter-spacing:-0.03em;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--grad);}
+  .bell{width:38px;height:38px;border-radius:50%;background:var(--bg-elev2);display:flex;
+    align-items:center;justify-content:center;position:relative;border:1px solid var(--border);}
+  .bell svg{width:18px;height:18px;}
+  .badge-dot{position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;
+    font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--bg);}
+
+  .switcher{margin:0 18px 6px;font-size:11px;color:var(--text-dim2);
+    display:flex;align-items:center;gap:6px;}
+  .switcher select, .switcher input{background:var(--bg-elev2);color:var(--text-dim);border:1px solid var(--border);
+    border-radius:8px;font-size:11px;padding:4px 6px;}
+
+  .content{flex:1;padding:4px 18px 100px;overflow-y:auto;}
+  .screen{display:none;animation:fade .18s ease;} body:not(.telegram-ready) #screen-home{display:block;}
+  .screen.active{display:block;}
+  /* Внутренние разделы Mini App открываются как отдельные полноэкранные окна. */
+  .screen.page-screen{position:fixed;inset:0;z-index:80;max-width:460px;margin:0 auto;background:var(--bg);overflow-y:auto;padding:0 18px calc(110px + env(safe-area-inset-bottom));}
+  .screen.page-screen.active{display:block;}
+  .page-head{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:12px 0 12px;background:linear-gradient(var(--bg) 78%,transparent);}
+  .page-back{width:38px;height:38px;border:1px solid var(--border);border-radius:12px;background:var(--bg-elev);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;}
+  .page-back svg{width:19px;height:19px;}
+  .page-head-title{font-family:"Montserrat",sans-serif;font-weight:800;font-size:19px;letter-spacing:-.02em;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+  /* balance card */
+  .balance-card{background:var(--grad);border-radius:var(--radius-lg);padding:24px 22px 22px;
+    margin:10px 0 16px;position:relative;overflow:hidden;}
+  .balance-card::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(circle at 85% -10%, rgba(255,255,255,.25), transparent 55%);}
+  .id-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;position:relative;z-index:1;}
+  .avatar{width:52px;height:52px;border-radius:50%;background:#101a2f;display:flex;align-items:center;
+    justify-content:center;font-size:22px;border:2px solid rgba(255,255,255,.35);flex-shrink:0;overflow:hidden;}
+  .id-name{font-weight:800;font-size:17px;}
+  .id-handle{font-size:13px;color:rgba(255,255,255,.75);}
+  .level-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);
+    padding:4px 11px 4px 9px;border-radius:20px;font-size:12px;font-weight:700;margin-top:6px;position:relative;z-index:1;}
+  .bal-label{font-size:13px;color:rgba(255,255,255,.8);position:relative;z-index:1;}
+  .bal-amount{font-size:36px;font-weight:800;letter-spacing:-0.03em;margin:2px 0 18px;position:relative;z-index:1;}
+  .bal-btns{display:flex;gap:10px;position:relative;z-index:1;}
+  .btn{border:none;border-radius:14px;padding:13px;font-size:15px;font-weight:700;flex:1;cursor:pointer;}
+  .btn-light{background:#fff;color:#3b3f8f;}
+  .btn-ghost{background:rgba(255,255,255,.16);color:#fff;}
+
+  .quick-row{display:flex;gap:12px;margin-bottom:22px;}
+  .quick-card{flex:1;background:var(--bg-elev);border:1px solid var(--border);border-radius:20px;
+    padding:16px 14px;cursor:pointer;}
+  .quick-icon{width:38px;height:38px;border-radius:11px;background:var(--bg-elev2);display:flex;
+    align-items:center;justify-content:center;margin-bottom:22px;}
+  .quick-icon svg{width:18px;height:18px;}
+  .quick-title{font-weight:700;font-size:15px;}
+  .quick-sub{font-size:12.5px;color:var(--text-dim);margin-top:2px;}
+
+  .section-title{font-weight:800;font-size:20px;margin:18px 0 10px;letter-spacing:-0.01em;}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--text-dim);}
+  .empty-emoji{font-size:38px;margin-bottom:10px;}
+  .empty-title{color:var(--text);font-weight:700;font-size:16px;margin-bottom:4px;}
+  .empty-sub{font-size:13.5px;line-height:1.4;}
+
+  /* deals list */
+  .deal-card{position:relative;background:var(--bg-elev);border:1px solid var(--border);border-radius:18px;
+    padding:14px 16px 14px 22px;margin-bottom:10px;cursor:pointer;overflow:hidden;}
+  .deal-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent1);}
+  .deal-card.bar-done::before{background:var(--green);}
+  .deal-card.bar-wait::before{background:var(--amber);}
+  .deal-card.bar-active::before{background:var(--accent1);}
+  .deal-code{font-size:11.5px;color:var(--text-dim2);font-weight:700;letter-spacing:.02em;margin-bottom:2px;}
+  .deal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .deal-who{font-weight:700;font-size:14.5px;}
+  .deal-amount{font-weight:800;font-size:15px;}
+  .deal-desc{font-size:13px;color:var(--text-dim);margin-bottom:6px;}
+  .deal-hint-line{font-size:12.5px;font-weight:700;color:var(--accent1);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+  .deal-hint-line.done{color:var(--accent1);}
+  .deal-hint-line.wait{color:var(--amber);}
+  .status-pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;}
+  .status-pill::before{content:"●";font-size:8px;}
+  .st-wait{background:#f2b84b22;color:var(--amber);}
+  .st-done{background:#34d39922;color:var(--green);}
+  .st-active{background:#5a7dfa22;color:var(--accent1);}
+  .deal-actions{display:flex;gap:8px;margin-top:10px;}
+  .deal-actions button{flex:1;padding:9px;border-radius:11px;border:none;font-weight:700;font-size:13px;}
+  .btn-accept{background:var(--green);color:#04170f;}
+  .btn-decline{background:var(--bg-elev2);color:var(--text-dim);}
+
+  .tabs-row{display:flex;gap:8px;margin:6px 0 14px;}
+  .tab-chip{padding:8px 14px;border-radius:20px;background:var(--bg-elev);border:1px solid var(--border);
+    font-size:13px;color:var(--text-dim);font-weight:600;cursor:pointer;}
+  .tab-chip.active{background:var(--accent1);color:#fff;border-color:var(--accent1);}
+
+  /* deals search & filters */
+  .deals-search{width:100%;background:var(--bg-elev);border:1px solid var(--border);border-radius:16px;
+    padding:14px 16px;color:var(--text);font-size:14.5px;margin-bottom:10px;}
+  .deals-search:focus{outline:none;border-color:var(--accent1);}
+  .deals-filter-row{display:flex;gap:10px;margin-bottom:16px;}
+  .filter-btn{flex:1;padding:13px;border-radius:14px;border:1px solid var(--border);background:var(--bg-elev);
+    color:var(--text);font-weight:700;font-size:14.5px;cursor:pointer;}
+  .filter-btn.primary{background:var(--grad);border:none;color:#fff;}
+  .deals-tabs{display:flex;background:var(--bg-elev);border:1px solid var(--border);border-radius:16px;
+    padding:4px;margin-bottom:12px;}
+  .deals-tab{flex:1;text-align:center;padding:10px;border-radius:12px;font-size:13.5px;font-weight:700;
+    color:var(--text-dim);cursor:pointer;}
+  .deals-tab.active{background:var(--accent1);color:#fff;}
+  .deals-hint{background:var(--bg-elev);border:1px solid var(--border);border-left:3px solid var(--accent1);
+    border-radius:14px;padding:12px 14px;font-size:12.5px;color:var(--text-dim);line-height:1.5;margin-bottom:14px;}
+  .deals-hint-more{color:var(--accent1);font-weight:700;cursor:pointer;margin-left:4px;white-space:nowrap;}
+
+  /* support info card */
+  .info-card{background:#fff;color:#161722;border-radius:20px;padding:18px 18px 16px;margin:2px 0 10px;
+    max-width:88%;}
+  .info-card-title{font-weight:800;font-size:16.5px;text-align:center;margin-bottom:3px;}
+  .info-card-sub{font-size:12.5px;color:#6b6d7c;text-align:center;margin-bottom:14px;}
+  .info-card-step{display:flex;gap:12px;margin-bottom:14px;}
+  .info-card-num{width:26px;height:26px;border-radius:50%;background:var(--accent1);color:#fff;font-weight:800;
+    font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .info-card-step-title{font-weight:700;font-size:14px;color:#161722;}
+  .info-card-step-sub{font-size:12.5px;color:#6b6d7c;margin-top:1px;}
+  .info-card-footer{font-size:11.5px;color:#9a9caa;text-align:center;margin-top:4px;}
+
+  /* chats */
+  .chat-row{display:flex;gap:12px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer;}
+  .chat-ava{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:20px;flex-shrink:0;}
+  .chat-ava.support{background:linear-gradient(135deg,#34d399,#10b981);}
+  .chat-ava.notif{background:linear-gradient(135deg,#f2b84b,#f0925a);}
+  .chat-ava.user{background:var(--bg-elev2);color:var(--text-dim);font-weight:700;font-size:16px;}
+  .chat-ava svg{width:22px;height:22px;display:block;}
+  #cdAva svg{width:20px;height:20px;}
+  .chat-mid{flex:1;min-width:0;}
+  .chat-name-row{display:flex;justify-content:space-between;align-items:center;}
+  .chat-name{font-weight:700;font-size:15px;display:flex;align-items:center;gap:5px;}
+  .chat-time{font-size:11.5px;color:var(--text-dim2);}
+  .chat-preview{font-size:13px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    max-width:230px;margin-top:1px;}
+  .verified-badge{width:14px;height:14px;border-radius:50%;background:var(--accent1);display:inline-flex;
+    align-items:center;justify-content:center;flex-shrink:0;}
+  .verified-badge svg{width:9px;height:9px;}
+  .unread{background:var(--accent1);color:#fff;font-size:11px;font-weight:700;min-width:18px;height:18px;
+    border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;}
+
+  /* profile */
+  .profile-card{background:var(--bg-elev);border:1px solid var(--border);border-radius:22px;padding:20px;margin:10px 0 16px;
+    display:flex;align-items:center;gap:14px;}
+  .profile-card .avatar{width:60px;height:60px;font-size:26px;border:none;background:var(--bg-elev2);}
+  .stats-row{display:flex;background:var(--bg-elev);border:1px solid var(--border);border-radius:20px;margin-bottom:16px;overflow:hidden;}
+  .stat-cell{flex:1;text-align:center;padding:16px 6px;border-right:1px solid var(--border);}
+  .stat-cell:last-child{border-right:none;}
+  .stat-num{font-weight:800;font-size:20px;}
+  .stat-label{font-size:11.5px;color:var(--text-dim);margin-top:2px;}
+  .menu-group{background:var(--bg-elev);border:1px solid var(--border);border-radius:20px;margin-bottom:16px;overflow:hidden;}
+  .menu-item{display:flex;align-items:center;gap:13px;padding:15px 16px;border-bottom:1px solid var(--border);cursor:pointer;}
+  .menu-item:last-child{border-bottom:none;}
+  .menu-icon{width:36px;height:36px;border-radius:10px;background:var(--bg-elev2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .menu-icon svg{width:17px;height:17px;}
+  .menu-text{flex:1;}
+  .menu-title{font-weight:700;font-size:14.5px;}
+  .menu-sub{font-size:12px;color:var(--text-dim);margin-top:1px;}
+  .group-label{font-size:12.5px;color:var(--text-dim2);margin:0 4px 8px;font-weight:600;}
+
+  /* bottom nav */
+  .bottomnav{position:fixed;z-index:200;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;
+    background:rgba(10,11,18,.92);backdrop-filter:blur(14px);border-top:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-around;padding:10px 8px calc(10px + env(safe-area-inset-bottom));z-index:40;}
+  .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-dim2);
+    font-size:10.5px;font-weight:600;cursor:pointer;flex:1;}
+  .nav-item.active{color:var(--accent1);}
+  .nav-item svg{width:22px;height:22px;}
+  .nav-plus{width:50px;height:50px;border-radius:50%;background:var(--grad);display:flex;align-items:center;
+    justify-content:center;margin-top:-26px;box-shadow:0 6px 18px rgba(90,125,250,.4);cursor:pointer;}
+  .nav-plus svg{width:22px;height:22px;}
+
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+  .modal-bg.show{display:flex;}
+  .modal-sheet{background:var(--bg-elev);width:100%;max-width:460px;border-radius:26px 26px 0 0;
+    padding:22px 20px calc(22px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;
+    animation:slideup .22s ease;}
+  @keyframes slideup{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-title{font-weight:800;font-size:20px;margin-bottom:14px;}
+  .field-label{font-size:12.5px;color:var(--text-dim);margin:14px 0 6px;font-weight:600;}
+  .field{width:100%;background:var(--bg-elev2);border:1px solid var(--border);border-radius:14px;
+    padding:13px 14px;color:var(--text);font-size:15px;}
+  .field:focus{outline:none;border-color:var(--accent1);}
+  .role-row{display:flex;gap:10px;margin-top:6px;}
+  .role-btn{flex:1;padding:14px;border-radius:14px;border:1.5px solid var(--border);background:var(--bg-elev2);
+    color:var(--text);font-weight:700;font-size:14.5px;cursor:pointer;}
+  .role-btn.sel{border-color:var(--accent1);background:#5a7dfa1c;color:var(--accent1);}
+  .modal-btn{width:100%;padding:15px;border-radius:14px;border:none;background:var(--grad);color:#fff;
+    font-weight:800;font-size:15.5px;margin-top:18px;cursor:pointer;}
+  .modal-btn:disabled{opacity:.4;}
+  .modal-close{width:100%;padding:13px;border-radius:14px;border:none;background:transparent;
+    color:var(--text-dim);font-weight:600;font-size:14px;margin-top:6px;}
+
+  /* policy modal */
+  .policy-intro{font-size:13px;color:var(--text-dim);line-height:1.55;margin-bottom:16px;}
+  .policy-h{font-weight:800;font-size:16.5px;margin:20px 0 10px;letter-spacing:-0.01em;}
+  .policy-h:first-of-type{margin-top:4px;}
+  .policy-num{display:inline-block;background:#5a7dfa22;color:var(--accent1);font-weight:700;
+    font-size:12px;padding:3px 9px;border-radius:8px;margin-bottom:7px;}
+  .policy-p{font-size:13.5px;color:var(--text-dim);line-height:1.55;margin:0 0 16px;}
+  .policy-warn{background:var(--bg-elev2);border:1px solid var(--border);border-radius:16px;
+    padding:14px 16px;margin:6px 0 18px;font-size:13px;line-height:1.55;color:var(--amber);}
+  .policy-warn b{color:var(--amber);}
+  .policy-org{border-top:1px solid var(--border);padding-top:16px;margin-top:6px;}
+  .policy-org-h{font-size:12px;color:var(--text-dim2);font-weight:700;letter-spacing:.04em;margin-bottom:8px;}
+  .policy-org-p{font-size:12.5px;color:var(--text-dim);line-height:1.55;margin:0 0 10px;}
+  .start-step{display:flex;gap:12px;margin-bottom:14px;}
+  .start-num{width:24px;height:24px;border-radius:50%;background:var(--accent1);color:#fff;font-weight:800;
+    font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .start-step-text{font-size:13px;color:var(--text-dim);line-height:1.55;padding-top:2px;}
+  .start-step-text b{color:var(--text);}
+
+
+
+  /* verification info block inside Rules */
+
+  .policy-list{
+    margin:0 0 16px;
+    padding-left:24px;
+    color:var(--text);
+  }
+  .policy-list li{
+    margin:0 0 10px;
+    font-size:14px;
+    line-height:1.55;
+  }
+
+  .rules-verify-card{
+    background:#1a1c25;
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:26px 26px 22px;
+    margin:0 0 20px;
+    color:var(--text);
+  }
+  .rules-verify-title{
+    font-size:18px;
+    line-height:1.25;
+    font-weight:800;
+    letter-spacing:-.02em;
+    margin:0 0 20px;
+  }
+  .rules-verify-list{
+    margin:0;
+    padding:0 0 0 23px;
+  }
+  .rules-verify-list li{
+    font-size:16px;
+    line-height:1.55;
+    font-weight:400;
+    margin:0 0 17px;
+    padding-left:1px;
+  }
+  .rules-verify-list li:last-child{margin-bottom:0;}
+  .rules-verify-list b{font-weight:800;color:var(--text);}
+  .rules-verify-note{
+    font-size:16px;
+    line-height:1.55;
+    font-weight:400;
+    margin:20px 0 0;
+  }
+  .rules-verify-note b{font-weight:800;color:var(--text);}
+
+  /* verification modal — compact, matching the supplied mobile reference */
+  .verify-sheet{
+    background:#0f111a;
+    padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+    max-height:60vh;
+    border-radius:26px 26px 0 0;
+  }
+  .verify-title{
+    text-align:center;
+    font-weight:800;
+    font-size:20px;
+    line-height:1.08;
+    letter-spacing:-.02em;
+    margin:0 0 25px;
+  }
+  .verify-benefits{
+    background:#1a1c25;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px 16px;
+    margin:0 0 14px;
+  }
+  .verify-benefits-title{font-size:16.5px;font-weight:800;margin-bottom:10px;}
+  .verify-benefit{font-size:13.5px;line-height:1.55;font-weight:700;margin-top:8px;}
+  .verify-benefit:first-of-type{margin-top:0;}
+  .verify-benefit span{font-weight:400;}
+  .verify-level{
+    color:var(--text);
+    font-size:13.5px;
+    line-height:1.55;
+    font-weight:700;
+    margin:0 0 12px;
+  }
+  .verify-description{
+    color:var(--text-dim);
+    font-size:13.5px;
+    line-height:1.55;
+    margin-bottom:10px;
+  }
+  .verify-confirm{
+    width:100%;
+    height:40px;
+    border:none;
+    border-radius:14px;
+    background:var(--grad);
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .verify-close{
+    width:100%;
+    height:40px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg-elev2);
+    color:var(--text);
+    font-size:14px;
+    font-weight:700;
+    margin-top:10px;
+    cursor:pointer;
+  }
+
+  /* chat detail */
+  .chat-detail{position:fixed;inset:0;background:var(--bg);z-index:90;display:none;flex-direction:column;
+    max-width:460px;margin:0 auto;}
+  .chat-detail.show{display:flex;}
+  .cd-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);}
+  .cd-back{width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .cd-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+  .attach-btn{background:var(--bg-elev2);color:var(--text);border:1px solid var(--border);}
+  .attach-btn svg{width:19px;height:19px;}
+  .cd-attachments{display:flex;gap:7px;flex-wrap:wrap;padding:7px 12px 0;}
+  .attachment-chip{display:flex;align-items:center;gap:7px;max-width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:11px;background:var(--bg-elev2);font-size:12px;color:var(--text);}
+  .attachment-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:230px;}
+  .attachment-chip button{border:0;background:none;color:var(--text-dim);font-size:17px;cursor:pointer;padding:0 2px;}
+  .msg-attachment{display:flex;align-items:center;gap:8px;margin-top:6px;padding:8px 9px;border-radius:10px;background:#ffffff12;font-size:12px;}
+  .msg-attachment svg{width:16px;height:16px;flex:none;}
+
+  .msg{max-width:78%;padding:10px 13px;border-radius:16px;font-size:14px;line-height:1.4;}
+  .msg.in{background:var(--bg-elev);align-self:flex-start;border-bottom-left-radius:4px;}
+  .msg.out{background:var(--grad);align-self:flex-end;border-bottom-right-radius:4px;color:#fff;}
+  .msg.sys{background:var(--bg-elev2);align-self:center;color:var(--text-dim);font-size:12.5px;text-align:center;max-width:90%;}
+  .cd-input-row{position:relative;z-index:210;display:flex;gap:10px;padding:12px 14px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);}
+  .cd-input{flex:1;background:var(--bg-elev);border:1px solid var(--border);border-radius:22px;padding:11px 16px;color:var(--text);font-size:14.5px;}
+  .cd-send{width:42px;height:42px;border-radius:50%;background:var(--grad);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .cd-send svg{width:18px;height:18px;}
+  .typing{font-size:12.5px;color:var(--text-dim);align-self:flex-start;padding-left:4px;}
+  .sticker-picker{position:absolute;left:12px;right:12px;bottom:76px;background:var(--bg-elev);border:1px solid var(--border);border-radius:20px;padding:10px;z-index:50;box-shadow:0 18px 50px rgba(0,0,0,.35);}
+  .sticker-picker-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--text-dim);padding:3px 5px 9px;}
+  .sticker-picker-head span{font-size:22px;line-height:1;cursor:pointer;color:var(--text-dim2);}
+  .sticker-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;}
+  .sticker-grid button{border:0;background:var(--bg-elev2);border-radius:13px;aspect-ratio:1;color:var(--text);font-size:25px;cursor:pointer;}
+  .sticker-grid button:active{transform:scale(.88);}
+  .chat-sticker{align-self:flex-start;font-size:64px;line-height:1;padding:5px 8px;filter:drop-shadow(0 5px 10px rgba(0,0,0,.2));animation:stickerIn .16s ease-out;}
+  @keyframes stickerIn{from{opacity:0;transform:scale(.65)}to{opacity:1;transform:scale(1)}}
+  .review-more{display:block;width:100%;margin:14px 0 30px;padding:13px 16px;border:1px solid var(--border);border-radius:14px;background:var(--bg-elev);color:var(--text);font-weight:700;font-size:14px;cursor:pointer;}
+
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--bg-elev2);
+    border:1px solid var(--border);padding:12px 18px;border-radius:14px;font-size:13.5px;z-index:200;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:80%;text-align:center;display:none;}
+
+  .hint-box{font-size:13px;color:var(--text-dim);line-height:1.45;margin:2px 0 14px;padding-left:10px;border-left:2px solid var(--border);}
+  .hint-link{color:var(--accent1);font-weight:600;cursor:pointer;margin-top:2px;display:inline-block;}
+  .role-banner{font-size:13.5px;color:var(--text-dim);line-height:1.4;margin-bottom:10px;}
+  .role-banner b{color:var(--text);}
+  .change-role-btn{width:100%;padding:13px;border-radius:14px;border:1px solid var(--border);background:var(--bg-elev2);
+    color:var(--text);font-weight:700;font-size:14px;margin-bottom:14px;cursor:pointer;}
+  .at-field{position:relative;}
+  .at-field .at-prefix{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-weight:700;pointer-events:none;}
+  .at-field input{padding-left:24px;}
+  textarea.field{resize:none;min-height:78px;font-family:inherit;line-height:1.4;}
+  .field-note{font-size:11.5px;color:var(--text-dim2);margin-top:5px;}
+  .photo-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+  .photo-thumb{width:64px;height:64px;border-radius:12px;overflow:hidden;position:relative;border:1px solid var(--border);}
+  .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-thumb .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#000c;
+    color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .ghost-btn{width:100%;padding:13px;border-radius:14px;border:1px solid var(--border);background:var(--bg-elev2);
+    color:var(--text-dim);font-weight:700;font-size:14px;cursor:pointer;margin-top:6px;}
+  .select-row{width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--bg-elev2);
+    border:1px solid var(--border);border-radius:14px;padding:13px 14px;color:var(--text);font-size:15px;font-weight:600;cursor:pointer;}
+  .select-row svg{width:16px;height:16px;color:var(--text-dim);}
+  .summary-note{font-size:12.5px;color:var(--text-dim);line-height:1.4;margin-top:10px;}
+  .cur-row{display:flex;align-items:center;justify-content:space-between;padding:14px 4px;border-bottom:1px solid var(--border);cursor:pointer;font-size:15px;font-weight:600;}
+  .cur-row:last-child{border-bottom:none;}
+  .cur-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;position:relative;}
+  .cur-radio.sel{border-color:var(--accent1);}
+  .cur-radio.sel::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--accent1);}
+
+  .switch-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);gap:10px;}
+  .switch-row:last-child{border-bottom:none;}
+  .switch{width:46px;height:26px;border-radius:14px;background:var(--bg-elev2);position:relative;cursor:pointer;flex-shrink:0;transition:.18s;border:1px solid var(--border);}
+  .switch.on{background:var(--accent1);border-color:var(--accent1);}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.18s;}
+  .switch.on::after{left:22px;}
+
+  .wallet-tabs{display:flex;background:var(--bg-elev2);border-radius:14px;padding:4px;margin-bottom:16px;}
+  .wallet-tab{flex:1;text-align:center;padding:11px;border-radius:11px;font-weight:700;font-size:14px;color:var(--text-dim);cursor:pointer;}
+  .wallet-tab.active{background:var(--grad);color:#fff;}
+  .pay-method{background:var(--bg-elev);border:1px solid var(--border);border-radius:18px;padding:14px 16px;
+    margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;}
+  .pay-icon{width:44px;height:44px;border-radius:12px;background:var(--bg-elev2);display:flex;align-items:center;
+    justify-content:center;font-size:20px;flex-shrink:0;}
+  .pay-title{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .pay-tag{display:inline-block;background:#5a7dfa22;color:var(--accent1);font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;}
+  .pay-desc{font-size:12.5px;color:var(--text-dim);margin-top:3px;line-height:1.4;}
+  .pay-method.sel{border-color:var(--accent1);background:#5a7dfa14;}
+  .chat-online{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-dim);margin-top:1px;}
+  .chat-online .dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+
+  /* reviews page */
+  .reviews-head{display:flex;gap:16px;align-items:center;padding:7px 0 12px;}
+  .reviews-logo{width:92px;height:92px;border-radius:22px;background:linear-gradient(135deg,#3446ff 0%,#7b2cff 38%,#ff2b9a 68%,#00e5b5 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 18px rgba(0,0,0,.18);}
+  .reviews-logo span{font-size:54px;font-weight:900;line-height:1;color:#fff;letter-spacing:-.08em;}
+  .reviews-score{min-width:0;}
+  .reviews-score-main{font-size:44px;font-weight:850;line-height:.95;letter-spacing:-.05em;white-space:nowrap;}
+  .reviews-score-main small{font-size:20px;color:var(--text-dim);font-weight:700;letter-spacing:-.02em;}
+  .reviews-stars{color:#ffb800;font-size:21px;letter-spacing:1px;line-height:1;margin-top:10px;white-space:nowrap;}
+  .reviews-count{font-size:16px;color:var(--text-dim);margin-top:9px;}
+  .rating-bars{margin:1px 0 17px;}
+  .rating-line{display:grid;grid-template-columns:40px 1fr 38px;align-items:center;gap:8px;margin:9px 0;color:var(--text-dim);font-size:14px;}
+  .rating-label{white-space:nowrap;}
+  .rating-track{height:9px;border-radius:7px;background:var(--bg-elev2);overflow:hidden;}
+  .rating-fill{height:100%;border-radius:7px;background:#4d92f8;}
+  .rating-percent{text-align:right;white-space:nowrap;}
+  .verify-info{background:var(--bg-elev);border:1px solid var(--border);border-radius:18px;padding:21px 20px 20px;margin:5px 0 21px;}
+  .verify-info-title{font-size:22px;font-weight:800;margin-bottom:17px;}
+  .verify-info-text{font-size:18px;line-height:1.48;color:var(--text);}
+  .review-form-title{font-size:17px;font-weight:700;color:var(--text-dim);margin:0 6px 14px;}
+  .review-form{background:linear-gradient(145deg,#171925,#151621);border:1px solid var(--border);border-radius:20px;padding:18px 16px 17px;margin-bottom:22px;}
+  .review-form-note{font-size:16px;line-height:1.45;color:var(--text-dim);margin-bottom:15px;}
+  .review-stars-select{display:flex;gap:14px;font-size:34px;line-height:1;margin:1px 0 16px;color:#ffb800;}
+  .review-stars-select span{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;opacity:.38;transition:.12s;}
+  .review-stars-select span.selected{opacity:1;}
+  .review-field{width:100%;box-sizing:border-box;background:#1d2230;border:1px solid #303442;border-radius:18px;padding:15px 16px;color:var(--text);font-size:18px;margin-bottom:11px;outline:none;}
+  .review-field::placeholder{color:#969aaa;}
+  .review-textarea{min-height:118px;resize:none;line-height:1.35;}
+  .review-counter{font-size:15px;color:var(--text-dim);margin:2px 0 15px;}
+  .review-submit{width:100%;border:none;border-radius:18px;padding:15px;background:linear-gradient(100deg,#7180ad,#8b7cbd);color:#c8c8d0;font-size:18px;font-weight:800;opacity:.82;}
+  .all-reviews-title{font-size:17px;color:var(--text-dim);margin:0 6px 14px;}
+  .review-card{background:var(--bg-elev);border:1px solid rgba(255,255,255,.025);border-radius:18px;padding:17px 16px 15px;margin-bottom:10px;}
+  .review-card-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
+  .review-user{font-size:17px;font-weight:800;color:var(--text);}
+  .review-date{font-size:14px;color:var(--text-dim);white-space:nowrap;}
+  .review-card-stars{color:#ffb800;font-size:18px;letter-spacing:1px;margin-bottom:9px;}
+  .review-card-text{font-size:17px;line-height:1.42;color:#9b9eac;}
+  @media(max-width:380px){
+    .reviews-head{gap:15px}.reviews-logo{width:105px;height:105px;border-radius:24px}.reviews-logo span{font-size:60px}.reviews-score-main{font-size:48px}.reviews-stars{font-size:23px}.reviews-count{font-size:17px}
+    .verify-info{padding:22px 22px}.verify-info-title{font-size:23px}.verify-info-text{font-size:19px}.review-form{padding:20px 18px}.review-stars-select{gap:14px;font-size:36px}.review-field{font-size:18px}
+  }
+
+  /* expandable hint in new deal */
+  .deal-hint-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
+  .deal-hint-text.expanded{display:block;-webkit-line-clamp:unset;overflow:visible;}
+  .deal-hint-box .hint-link{display:inline-block;margin-top:8px;}
+</style>
+
+<style>
+  .notif-item{display:flex;gap:12px;padding:13px 4px;border-bottom:1px solid var(--border);transition:background .15s ease;}
+  .notif-item:hover{background:var(--bg-elev2);border-radius:14px;}
+  .notif-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--bg-elev2);flex:none;font-size:19px;}
+  .notif-title{font-weight:700;color:var(--text);font-size:14px;}
+  .notif-text{color:var(--text-dim);font-size:12px;line-height:1.4;margin-top:3px;}
+  .notif-time{color:var(--text-dim);font-size:10px;margin-top:5px;}
+
+  /* notifications popup */
+  .modal-overlay{position:fixed;inset:0;background:rgba(6,7,14,.72);backdrop-filter:blur(3px);
+    -webkit-backdrop-filter:blur(3px);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal-box{background:var(--bg-elev);width:100%;max-width:460px;border-radius:26px 26px 0 0;
+    padding:10px 20px calc(20px + env(safe-area-inset-bottom));border:1px solid var(--border);border-bottom:none;
+    box-shadow:0 -14px 40px rgba(0,0,0,.45);animation:slideup .22s ease;position:relative;}
+  .modal-box::before{content:"";position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    width:38px;height:4px;border-radius:3px;background:var(--bg-elev2);}
+  #notificationsModal .modal-box{max-height:78vh;display:flex;flex-direction:column;padding-top:22px;}
+  #notificationsModal .modal-head{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:6px;padding-top:6px;}
+  #notificationsModal .modal-title{margin-bottom:0;background:var(--grad);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;}
+  #notificationsModal .modal-close{width:30px;height:30px;padding:0;flex:none;border-radius:50%;
+    background:var(--bg-elev2);color:var(--text-dim);font-size:17px;line-height:1;margin-top:0;
+    display:flex;align-items:center;justify-content:center;border:1px solid var(--border);}
+  #notificationsModal .modal-close:active{background:var(--border);}
+  #notificationsModal .notif-list{overflow-y:auto;flex:1;padding:6px 0 12px;}
+  .notif-empty{padding:26px 10px 22px;text-align:center;}
+  .notif-empty-icon{width:64px;height:64px;border-radius:50%;background:var(--grad);display:flex;
+    align-items:center;justify-content:center;font-size:27px;margin:0 auto 16px;
+    box-shadow:0 10px 24px rgba(90,125,250,.35);}
+  .notif-empty-title{font-weight:800;font-size:16.5px;color:var(--text);margin-bottom:6px;}
+  .notif-empty-sub{font-size:13px;color:var(--text-dim);line-height:1.5;max-width:250px;margin:0 auto;}
+  .notif-close-btn{width:100%;padding:15px;border-radius:14px;border:none;background:var(--grad);
+    color:#fff;font-weight:800;font-size:15.5px;margin-top:16px;cursor:pointer;flex:none;}
+  .notif-close-btn:active{opacity:.85;}
+
+  /* ===== ONBOARDING ===== */
+  .onb-overlay{position:fixed;inset:0;background:var(--bg);z-index:300;display:none;
+    flex-direction:column;max-width:460px;margin:0 auto;}
+  .onb-overlay.show{display:flex;}
+  .onb-top{display:flex;justify-content:flex-start;padding:16px 18px 0;}
+  .onb-close{display:flex;align-items:center;gap:6px;background:var(--bg-elev2);border:1px solid var(--border);
+    color:var(--text);font-weight:700;font-size:14px;padding:9px 16px 9px 12px;border-radius:20px;cursor:pointer;}
+  .onb-close svg{width:16px;height:16px;}
+  .onb-track{flex:1;position:relative;overflow:hidden;touch-action:pan-y;}
+  .onb-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:24px 30px;opacity:0;transform:translateX(24px);
+    transition:opacity .28s ease, transform .28s ease;pointer-events:none;}
+  .onb-slide.active{opacity:1;transform:translateX(0);pointer-events:auto;}
+  .onb-slide.prev{transform:translateX(-24px);}
+  .onb-art{width:150px;height:150px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    margin-bottom:30px;position:relative;flex-shrink:0;}
+  .onb-art.glow{background:radial-gradient(circle, rgba(90,125,250,.55) 0%, rgba(90,125,250,.15) 45%, transparent 72%);}
+  .onb-art .duck{font-size:88px;line-height:1;filter:drop-shadow(0 10px 22px rgba(0,0,0,.35));}
+  .onb-art .deco{position:absolute;font-size:30px;}
+  .onb-title{font-weight:800;font-size:25px;letter-spacing:-0.01em;margin-bottom:12px;}
+  .onb-text{font-size:15px;color:var(--text-dim);line-height:1.5;max-width:310px;}
+  .onb-dots{display:flex;justify-content:center;gap:7px;padding:6px 0 14px;}
+  .onb-dot{width:7px;height:7px;border-radius:4px;background:var(--bg-elev2);transition:.2s;}
+  .onb-dot.active{width:22px;background:var(--accent1);}
+  .onb-bottom{padding:4px 20px calc(18px + env(safe-area-inset-bottom));}
+  .onb-next{width:100%;border:none;border-radius:14px;padding:16px;background:var(--grad);color:#fff;
+    font-weight:800;font-size:15.5px;cursor:pointer;}
+  .onb-skip{display:block;width:100%;text-align:center;background:transparent;border:none;color:var(--text-dim);
+    font-weight:600;font-size:14px;padding:14px 0 2px;cursor:pointer;}
+
+  /* ===== PROMO / BALANCE CAROUSEL ===== */
+  .promo-carousel{position:relative;background:var(--bg-elev);border:1px solid var(--border);border-radius:22px;
+    margin-bottom:16px;overflow:hidden;min-height:172px;touch-action:pan-y;}
+  .promo-track{position:relative;width:100%;height:172px;}
+  .promo-slide{position:absolute;inset:0;padding:18px 20px 16px;display:flex;flex-direction:column;
+    justify-content:flex-start;opacity:0;transform:translateX(16px);transition:opacity .25s ease, transform .25s ease;
+    pointer-events:none;overflow:hidden;}
+  .promo-slide.active{opacity:1;transform:translateX(0);pointer-events:auto;}
+  .promo-slide[data-i="0"]{background:radial-gradient(130% 150% at 82% -15%, #384a7a 0%, #1b2036 42%, #12131c 100%);}
+  .promo-slide[data-i="1"]{background:radial-gradient(130% 150% at 82% -15%, #5a4224 0%, #241d13 42%, #14110c 100%);}
+  .promo-slide[data-i="2"]{background:radial-gradient(130% 150% at 82% -15%, #3d2c5c 0%, #201a34 42%, #131320 100%);}
+  .promo-glow{position:absolute;border-radius:50%;filter:blur(30px);pointer-events:none;opacity:.6;}
+  .promo-slide[data-i="0"] .promo-glow{width:180px;height:180px;right:-46px;top:-46px;background:radial-gradient(circle,#5a7dfa 0%,transparent 72%);}
+  .promo-slide[data-i="1"] .promo-glow{width:180px;height:180px;right:-46px;top:-36px;background:radial-gradient(circle,#f2b84b 0%,transparent 72%);}
+  .promo-slide[data-i="2"] .promo-glow{width:180px;height:180px;right:-46px;top:-36px;background:radial-gradient(circle,#9b6bf0 0%,transparent 72%);}
+  .promo-kicker{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.04em;
+    color:var(--accent1);text-transform:uppercase;margin-bottom:6px;position:relative;z-index:1;}
+  .promo-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent1);}
+  .promo-title{font-weight:800;font-size:19px;letter-spacing:-0.01em;margin-bottom:6px;max-width:64%;position:relative;z-index:1;}
+  .promo-sub{font-size:12.5px;color:var(--text-dim);line-height:1.45;max-width:62%;position:relative;z-index:1;}
+  .promo-icon-wrap{position:absolute;right:14px;top:12px;width:88px;height:88px;z-index:1;}
+  .promo-icon-wrap svg{width:100%;height:100%;filter:drop-shadow(0 10px 20px rgba(0,0,0,.45));}
+  .promo-action{position:absolute;right:16px;bottom:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+    backdrop-filter:blur(6px);color:var(--text);font-weight:700;font-size:13px;padding:9px 16px;border-radius:20px;cursor:pointer;z-index:2;}
+  .promo-bars{position:absolute;left:16px;bottom:16px;display:flex;align-items:center;gap:5px;z-index:2;}
+  .promo-bar{width:20px;height:3px;border-radius:2px;background:rgba(255,255,255,.18);overflow:hidden;}
+  .promo-bar-fill{height:100%;width:0%;background:#fff;border-radius:2px;}
+  .promo-pause{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#fff;
+    opacity:.7;cursor:pointer;margin-left:2px;}
+  .promo-pause svg{width:13px;height:13px;}
+</style>
+
+</head>
+<body>
+<style id="local-debug-style">
+#localDebug {
+  position: fixed; inset: 12px; z-index: 999999;
+  display: none; overflow: auto; padding: 16px;
+  background: #181a20; color: #fff; border-radius: 14px;
+  font: 14px/1.45 monospace; white-space: pre-wrap;
+}
+#localDebug.show { display:block; }
+</style>
+<div id="localDebug"></div>
+<script>
+window.addEventListener('error', function(e) {
+  const d = document.getElementById('localDebug');
+  if (d) {
+    d.classList.add('show');
+    d.textContent = 'JavaScript error:\\n' + (e.message || 'Unknown error') +
+      '\\n\\nFile: ' + (e.filename || '') + '\\nLine: ' + (e.lineno || '');
+  }
+});
+window.addEventListener('unhandledrejection', function(e) {
+  const d = document.getElementById('localDebug');
+  if (d) {
+    d.classList.add('show');
+    d.textContent = 'Unhandled promise rejection:\\n' +
+      (e.reason && (e.reason.stack || e.reason.message) || String(e.reason));
+  }
+});
+</script>
+
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>Playerok</div>
+    <div class="bell" onclick="app.openNotifications()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <span class="badge-dot" id="notifBadge" style="display:none">0</span>
+    </div>
+  </div>
+  <div class="content" id="content">
+
+    <!-- HOME -->
+    <div class="screen active" id="screen-home">
+      <div class="balance-card">
+        <div class="id-row">
+          <div class="avatar" id="homeAvatar">🙂</div>
+          <div>
+            <div class="id-name" id="homeName">Гость</div>
+            <div class="id-handle" id="homeHandle">@guest</div>
+            <div class="level-pill" id="homeLevelPill">0 уровень</div>
+          </div>
+        </div>
+        <div class="bal-label">Баланс</div>
+        <div class="bal-amount"><span id="homeBalance">0,00</span> ₽</div>
+        <div class="bal-btns">
+          <button class="btn btn-light" onclick="app.topUp()">Пополнить</button>
+          <button class="btn btn-ghost" onclick="app.withdraw()">Вывести</button>
+        </div>
+      </div>
+
+      <div class="promo-carousel" id="promoCarousel">
+        <div class="promo-track" id="promoTrack"></div>
+        <div class="promo-bars" id="promoBars"></div>
+      </div>
+
+      <div class="quick-row">
+        <div class="quick-card" onclick="app.openNewDeal()">
+          <div class="quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+          <div class="quick-title">Новая сделка</div>
+          <div class="quick-sub">с гарантом</div>
+        </div>
+        <div class="quick-card" onclick="app.go('deals')">
+          <div class="quick-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>
+          <div class="quick-title">Мои сделки</div>
+          <div class="quick-sub">и приглашения</div>
+        </div>
+      </div>
+
+      <div class="group-label">Сервис</div>
+      <div class="menu-group">
+        <div class="menu-item" onclick="app.openNotifChat()">
+          <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></div>
+          <div class="menu-text"><div class="menu-title">История сделок</div></div>
+        </div>
+        <div class="menu-item" onclick="app.openReviews()">
+          <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg></div>
+          <div class="menu-text"><div class="menu-title">Отзывы</div></div>
+        </div>
+        <div class="menu-item" onclick="app.openRulesModal()">
+          <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9.3 8.4A8.5 8.5 0 0 1 3 12a8.4 8.4 0 0 1 14.3-6"/><path d="M21 3v6h-6"/></svg></div>
+          <div class="menu-text"><div class="menu-title">Помощь и правила</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div class="screen page-screen" id="screen-reviews"><div class="page-head"><button class="page-back" onclick="app.go('home')" aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button><div class="page-head-title">Отзывы</div></div>
+      <div class="section-title" style="margin-top:0">Отзывы Playerok</div>
+      <div class="reviews-head">
+        <div class="reviews-logo"><span>P</span></div>
+        <div class="reviews-score">
+          <div class="reviews-score-main">4.5<small>/5</small></div>
+          <div class="reviews-stars">★★★★★</div>
+          <div class="reviews-count">2185 отзывов</div>
+        </div>
+      </div>
+
+      <div class="rating-bars">
+        <div class="rating-line"><div class="rating-label">5★</div><div class="rating-track"><div class="rating-fill" style="width:60%"></div></div><div class="rating-percent">60%</div></div>
+        <div class="rating-line"><div class="rating-label">4★</div><div class="rating-track"><div class="rating-fill" style="width:30%"></div></div><div class="rating-percent">30%</div></div>
+        <div class="rating-line"><div class="rating-label">3★</div><div class="rating-track"><div class="rating-fill" style="width:10%"></div></div><div class="rating-percent">10%</div></div>
+        <div class="rating-line"><div class="rating-label">2★</div><div class="rating-track"><div class="rating-fill" style="width:0%"></div></div><div class="rating-percent">0%</div></div>
+        <div class="rating-line"><div class="rating-label">1★</div><div class="rating-track"><div class="rating-fill" style="width:0%"></div></div><div class="rating-percent">0%</div></div>
+      </div>
+
+      <div class="verify-info">
+        <div class="verify-info-title">Верификация</div>
+        <div class="verify-info-text">Верификация в Playerok работает стабильно: значок доверия, снятие лимитов новичка и приоритет в спорах. Проходите проверку через официальный контакт — всё прозрачно и без сюрпризов.</div>
+      </div>
+
+      <div class="review-form-title">Оставить отзыв</div>
+      <div class="review-form">
+        <div class="review-form-note">После 2 завершённых сделок можно опубликовать отзыв о сервисе.</div>
+        <div class="review-stars-select" id="reviewStarsSelect" aria-label="Оценка" role="radiogroup"><span data-rating="1" role="radio" aria-label="1 звезда">★</span><span data-rating="2" role="radio" aria-label="2 звезды">★</span><span data-rating="3" role="radio" aria-label="3 звезды">★</span><span data-rating="4" role="radio" aria-label="4 звезды">★</span><span data-rating="5" role="radio" aria-label="5 звёзд">★</span></div>
+        <input class="review-field" id="reviewNick" placeholder="Ваш ник">
+        <input class="review-field" id="reviewProduct" placeholder="Товар / игра">
+        <textarea class="review-field review-textarea" id="reviewText" maxlength="80" placeholder="Как прошла сделка в Playerok" oninput="app.updateReviewCounter()"></textarea>
+        <div class="review-counter" id="reviewCounter">0/80 · Нужно ещё 2 заверш. сделки</div>
+        <button class="review-submit" disabled>Опубликовать</button>
+      </div>
+
+      <div class="all-reviews-title">Все отзывы (2185)</div>
+      <div id="reviewsList"></div>
+    </div>
+
+    <!-- DEALS -->
+    <div class="screen page-screen" id="screen-deals"><div class="page-head"><button class="page-back" onclick="app.go('home')" aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button><div class="page-head-title">Сделки</div></div>
+      <div class="deal-top" style="margin-bottom:6px">
+        <div class="section-title" style="margin:0">Сделки</div>
+        <div class="bell" style="width:34px;height:34px" onclick="app.loadDeals().then(()=>app.renderDeals())"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.7-3.4L23 10M1 14l4.8 4.4A9 9 0 0 0 20.5 15"/></svg></div>
+      </div>
+      <div style="font-size:13px;color:var(--text-dim);margin:0 0 14px">Активные, завершённые и приглашения.</div>
+
+      <input class="deals-search" id="dealsSearch" placeholder="Поиск: код, игра, ник, описание…" oninput="app.renderDeals()">
+      <div class="deals-filter-row">
+        <button class="filter-btn" onclick="app.toggleDealFilters()">Фильтры</button>
+        <button class="filter-btn primary" onclick="app.renderDeals()">Найти</button>
+      </div>
+
+      <div class="deals-tabs">
+        <div class="deals-tab active" data-dt="mine" onclick="app.setDealsTab('mine',this)">Мои сделки</div>
+        <div class="deals-tab" data-dt="invites" onclick="app.setDealsTab('invites',this)">Приглашения</div>
+      </div>
+
+      <div class="tabs-row" id="dealsRoleRow" style="display:none">
+        <div class="tab-chip active" data-r="all" onclick="app.filterRole('all',this)">Все роли</div>
+        <div class="tab-chip" data-r="sell" onclick="app.filterRole('sell',this)">Я продаю</div>
+        <div class="tab-chip" data-r="buy" onclick="app.filterRole('buy',this)">Я покупаю</div>
+      </div>
+
+      <div class="tabs-row">
+        <div class="tab-chip active" data-f="all" onclick="app.filterDeals('all',this)">Все</div>
+        <div class="tab-chip" data-f="active" onclick="app.filterDeals('active',this)">Активные</div>
+        <div class="tab-chip" data-f="needs" onclick="app.filterDeals('needs',this)">Нужен ответ</div>
+      </div>
+
+      <div class="deals-hint">
+        <span id="dealsHintText">Строка — открыть сделку. Синяя подсказка под названием — что сделать сейчас.</span>
+        <span class="deals-hint-more" onclick="app.toggleDealsHint()" id="dealsHintToggle">Подробнее</span>
+      </div>
+
+      <div id="dealsList"></div>
+    </div>
+
+    <!-- CHATS -->
+    <div class="screen page-screen" id="screen-chats"><div class="page-head"><button class="page-back" onclick="app.go('home')" aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button><div class="page-head-title">Чаты</div></div>
+      <div class="section-title">Чаты</div>
+      <div class="chat-row" onclick="app.openNotifChat()">
+        <div class="chat-ava notif" aria-label="Уведомления"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+        <div class="chat-mid">
+          <div class="chat-name-row">
+            <div class="chat-name">Уведомления <span class="verified-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+            <div class="chat-time" id="notifTime">—</div>
+          </div>
+          <div class="chat-preview" id="notifPreview">Напоминания о сделках и заявках</div>
+        </div>
+        <div class="unread" id="notifUnread" style="display:none">0</div>
+      </div>
+      <div class="chat-row" onclick="app.openSupportChat()">
+        <div class="chat-ava support" aria-label="Поддержка"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3a8 8 0 0 0-8 8v4a2 2 0 0 0 2 2h2v-6H6a6 6 0 0 1 12 0h-2v6h2a2 2 0 0 0 2-2v-4a8 8 0 0 0-8-8Z"/><path d="M10 20h4"/></svg></div>
+        <div class="chat-mid">
+          <div class="chat-name-row">
+            <div class="chat-name">Поддержка <span class="verified-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+            <div class="chat-time" id="suppTime">—</div>
+          </div>
+          <div class="chat-preview" id="suppPreview">Задать вопрос</div>
+        </div>
+        <div class="unread" id="suppUnread" style="display:none">0</div>
+      </div>
+      <div id="dealChatsList"></div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="screen page-screen" id="screen-profile"><div class="page-head"><button class="page-back" onclick="app.go('home')" aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button><div class="page-head-title">Профиль</div></div>
+      <div class="section-title">Профиль</div>
+      <div class="profile-card">
+        <div class="avatar" id="profAvatar">🙂</div>
+        <div>
+          <div class="id-name" id="profName">Гость</div>
+          <div class="id-handle" id="profHandle">@guest</div>
+          <div class="level-pill" style="background:#ffffff14;color:var(--green)" id="profLevel">0 уровень</div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-cell"><div class="stat-num" id="statDeals">0</div><div class="stat-label">Сделки</div></div>
+        <div class="stat-cell"><div class="stat-num" id="statSuccess">0</div><div class="stat-label">Успешных</div></div>
+        <div class="stat-cell"><div class="stat-num" id="statRating">—</div><div class="stat-label">Рейтинг</div></div>
+      </div>
+      <div class="menu-group">
+        <div class="menu-item" id="verifyPhoneItem" style="display:none" onclick="app.requestPhone()">
+          <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="menu-text"><div class="menu-title">Подтвердить номер</div><div class="menu-sub">2 уровень: номер и код в чате</div></div>
+        </div>
+        <div class="menu-item" onclick="app.go('home')">
+          <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/></svg></div>
+          <div class="menu-text"><div class="menu-title">Кошелёк</div><div class="menu-sub">Пополнение и вывод средств</div></div>
+        </div>
+        <div class="menu-item" onclick="app.openSupportChat()">
+          <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="menu-text"><div class="menu-title">Чат с поддержкой</div><div class="menu-sub">Помощник в боте · только этот чат</div></div>
+        </div>
+      </div>
+
+      <div class="menu-group">
+        <div class="menu-item" onclick="app.openRulesModal()">
+          <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 17h.01M12 13.5c0-1.5 1.8-1.4 1.8-3a1.8 1.8 0 0 0-3.6 0"/></svg></div>
+          <div class="menu-text"><div class="menu-title">Справка и правила</div></div>
+        </div>
+        <div class="menu-item" onclick="app.openOnboarding()">
+          <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg></div>
+          <div class="menu-text"><div class="menu-title">Знакомство с сервисом</div></div>
+        </div>
+        <div class="menu-item" onclick="app.openPrivacyModal()">
+          <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/></svg></div>
+          <div class="menu-text"><div class="menu-title">Политика конфиденциальности</div></div>
+        </div>
+      </div>
+
+      <div id="adminSection" style="display:none">
+        <div class="group-label">Администрирование</div>
+        <div class="menu-group">
+          <div class="menu-item" onclick="app.openAdminPanel()">
+            <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+            <div class="menu-text"><div class="menu-title">Панель администратора</div><div class="menu-sub">Сводка, выводы, споры</div></div>
+          </div>
+          <div class="menu-item" onclick="app.openAdminChats()">
+            <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="menu-text"><div class="menu-title">Чаты поддержки</div><div class="menu-sub">Все обращения пользователей</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-label">Личные данные</div>
+      <div class="menu-group" style="padding:14px 16px 16px;">
+        <div class="field-label" style="margin-top:0">Имя</div>
+        <input class="field" id="usernameField" placeholder="Иван" oninput="app.saveUsername(this.value)">
+        <div class="field-label">Фамилия</div>
+        <input class="field" id="lastnameField" placeholder="Иванов" oninput="app.saveLastname(this.value)">
+        <div class="field-label">Телефон</div>
+        <input class="field" id="phoneField" placeholder="+79991234567" oninput="app.savePhone(this.value)">
+        <button class="modal-btn" style="margin-top:12px" onclick="app.requestPhone()">📱 Привязать номер к боту</button>
+        <button class="modal-btn" style="margin-top:8px" onclick="app.savePersonalData()">Сохранить</button>
+        <div class="field-note" style="margin-top:8px">Заполните имя, фамилию и телефон</div>
+      </div>
+
+      <div class="group-label">Настройки</div>
+      <div class="menu-group">
+        <div class="switch-row currency-setting-row" data-currency-setting="hint" role="button" tabindex="0" aria-label="Валюта подсказок" onclick="app.openHintCurrencyModal()">
+          <div>
+            <div class="menu-title">Валюта подсказок</div>
+            <div class="menu-sub">Для отображения при выводе</div>
+          </div>
+          <div class="select-row" style="width:auto;padding:8px 12px;font-size:13.5px" id="hintCurrencyLabel">₽ RUB</div>
+        </div>
+        <div class="switch-row settings-toggle-row" data-setting="notifyDeals" role="button" tabindex="0" aria-label="Сделки и статусы" onclick="app.toggleSetting('notifyDeals')">
+          <div class="menu-title">Сделки и статусы</div>
+          <div class="switch on" id="sw-notifyDeals" role="switch" aria-checked="true" data-state="on"></div>
+        </div>
+        <div class="switch-row settings-toggle-row" data-setting="notifyPayments" role="button" tabindex="0" aria-label="Оплаты и кошелёк" onclick="app.toggleSetting('notifyPayments')">
+          <div class="menu-title">Оплаты и кошелёк</div>
+          <div class="switch on" id="sw-notifyPayments" role="switch" aria-checked="true" data-state="on"></div>
+        </div>
+        <div class="switch-row settings-toggle-row" data-setting="notifyWithdrawals" role="button" tabindex="0" aria-label="Выводы" onclick="app.toggleSetting('notifyWithdrawals')">
+          <div class="menu-title">Выводы</div>
+          <div class="switch on" id="sw-notifyWithdrawals" role="switch" aria-checked="true" data-state="on"></div>
+        </div>
+        <div class="switch-row settings-toggle-row" data-setting="notifyChats" role="button" tabindex="0" aria-label="Сообщения в чатах сделок" onclick="app.toggleSetting('notifyChats')">
+          <div class="menu-title">Сообщения в чатах сделок</div>
+          <div class="switch on" id="sw-notifyChats" role="switch" aria-checked="true" data-state="on"></div>
+        </div>
+      </div>
+
+      <div class="group-label">Реферальная программа</div>
+      <div class="menu-group" style="padding:16px;">
+        <div class="field-note" style="margin:0 0 12px;font-size:13px" id="referralInfo">Приглашено: 0 · бонус 50 ₽ за друга</div>
+        <button class="modal-btn" style="margin-top:0" onclick="app.shareReferralLink()">Поделиться ссылкой</button>
+      </div>
+
+      <div class="group-label">Шаблоны для чата сделки</div>
+      <div class="menu-group" style="padding:16px;">
+        <div class="field-note" style="margin:0 0 10px;font-size:13px;line-height:1.4">Сохраните логин, ключ или инструкцию — вставьте в чат одним тапом.</div>
+        <div id="templatesList"></div>
+        <div class="field-label" style="margin-top:6px">Название (например, Логин)</div>
+        <input class="field" id="templateNameInput" placeholder="Название (например, Логин)">
+        <div class="field-label">Текст шаблона</div>
+        <textarea class="field" id="templateTextInput" placeholder="Текст шаблона"></textarea>
+        <button class="modal-btn" onclick="app.saveTemplate()">Сохранить шаблон</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottomnav">
+    <div class="nav-item active" data-s="home" onclick="app.go('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+      Главная
+    </div>
+    <div class="nav-item" data-s="deals" onclick="app.go('deals')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      Сделки
+    </div>
+    <div class="nav-plus" onclick="app.openNewDeal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+    </div>
+    <div class="nav-item" data-s="chats" onclick="app.go('chats')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Чаты
+      <span class="badge-dot" id="navChatBadge" style="display:none;position:static;margin-top:-38px;margin-left:26px;"></span>
+    </div>
+    <div class="nav-item" data-s="profile" onclick="app.go('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      Профиль
+    </div>
+  </div>
+</div>
+
+<!-- NEW DEAL MODAL -->
+<div class="modal-bg" id="dealModal">
+  <div class="modal-sheet">
+    <!-- step 1: role -->
+    <div id="dealStep1">
+      <div class="modal-title">Новая сделка</div>
+      <div class="hint-box deal-hint-box">
+        <div class="deal-hint-text" id="dealHintText1">После отправки заявки второй участник получит уведомление в <b>боте</b> и должен принять условия — только после этого гарант удержит средства.</div>
+        <span class="hint-link" id="dealHintToggle1" onclick="app.toggleDealHint(1)">Подробнее</span>
+      </div>
+      <div class="field-label" style="margin-top:0">Шаг 1 — ваша роль</div>
+      <div style="font-size:13.5px;color:var(--text-dim);line-height:1.4;margin-bottom:16px;">
+        Продавец отдаёт товар или услугу; покупатель платит с баланса. Дальше вы укажете <b style="color:var(--text)">ник второго участника</b> (без @).
+      </div>
+      <div class="role-row" style="flex-direction:column;">
+        <button class="role-btn" style="padding:16px;text-align:left" onclick="app.chooseRole('sell')">Я продаю</button>
+        <button id="dealRoleBuyBtn" class="role-btn" style="padding:16px;text-align:left" onclick="app.chooseRole('buy')">Я покупаю</button>
+      </div>
+      <button class="modal-close" onclick="app.closeModal()">Закрыть</button>
+    </div>
+    <!-- step 2: details -->
+    <div id="dealStep2" style="display:none">
+      <div class="modal-title">Новая сделка</div>
+      <div class="hint-box deal-hint-box">
+        <div class="deal-hint-text" id="dealHintText2">После отправки заявки второй участник получит уведомление в <b>боте</b> и должен принять условия — только после этого гарант удержит средства.</div>
+        <span class="hint-link" id="dealHintToggle2" onclick="app.toggleDealHint(2)">Подробнее</span>
+      </div>
+      <div class="role-banner" id="dealRoleBanner">Вы продаёте: укажите ник покупателя — ему придёт приглашение в бота.</div>
+      <button class="change-role-btn" onclick="app.backToRoleStep()">Сменить роль</button>
+
+      <div class="field-label" style="margin-top:0" id="dealCpLabel">@ покупателя</div>
+      <div class="at-field"><span class="at-prefix">@</span><input class="field" id="counterpartyInput" placeholder="например, danya_102b" autocomplete="off" inputmode="text"></div>
+
+      <div class="field-label">Товар / тема сделки</div>
+      <input class="field" id="dealTitleInput" placeholder="например, нфт подарок">
+
+      <div class="field-label">Описание для обоих</div>
+      <textarea class="field" id="dealDescInput" placeholder="Что передаётся, сроки, важные условия. Не менее 10 символов — чем яснее, тем меньше споров."></textarea>
+
+      <div class="field-label">Скрины товара (до 3)</div>
+      <div class="field-note" style="margin-top:0;margin-bottom:8px;">По желанию: фото из галереи, до 20 МБ; JPEG, PNG, GIF, WebP.</div>
+      <input type="file" id="photoFileInput" accept="image/*" multiple style="display:none" onchange="app.onPhotoPicked(event)">
+      <button class="ghost-btn" style="margin-top:0" onclick="document.getElementById('photoFileInput').click()">Добавить фото</button>
+      <div class="photo-row" id="dealPhotoRow"></div>
+
+      <button class="ghost-btn" onclick="app.repeatLastDeal()">Повторить последнюю сделку</button>
+
+      <div class="field-label">Валюта сделки</div>
+      <div class="select-row" onclick="app.openCurrencyModal()">
+        <span id="dealCurrencyLabel">₽ RUB</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+
+      <div class="field-label" id="dealAmountLabel">Сумма продавца</div>
+      <input class="field" id="dealAmountInput" type="number" placeholder="0" oninput="app.updateDealSummary()">
+      <div class="summary-note" id="dealSummaryNote">Продавец получит: 0,00 ₽ · Покупатель оплатит: 0,00 ₽ (комиссия 0,00 ₽)</div>
+
+      <button class="modal-btn" id="createDealBtn" onclick="app.createDeal()">Отправить заявку</button>
+      <button class="modal-close" onclick="app.closeModal()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- CURRENCY MODAL -->
+<div class="modal-bg" id="currencyModal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="currencyModalTitle">Валюта подсказок</div>
+    <div id="currencyList"></div>
+    <button class="modal-close" onclick="document.getElementById('currencyModal').classList.remove('show')">Закрыть</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL MODAL -->
+<div class="modal-bg" id="adminPanelModal">
+  <div class="modal-sheet">
+    <div class="modal-title">Панель администратора</div>
+    <div id="adminPanelBody" style="font-size:14px;color:var(--text-dim)">Загрузка...</div>
+    <button class="modal-close" onclick="app.closeModal()">Закрыть</button>
+  </div>
+</div>
+
+<!-- ADMIN CHATS MODAL -->
+<div class="modal-bg" id="adminChatsModal">
+  <div class="modal-sheet">
+    <div class="modal-title">Чаты поддержки</div>
+    <div id="adminChatsBody"></div>
+    <button class="modal-close" onclick="app.closeModal()">Закрыть</button>
+  </div>
+</div>
+
+<!-- TOPUP / WALLET MODAL -->
+<div class="modal-bg" id="rulesModal">
+  <div class="modal-sheet" style="max-height:84vh">
+    <div class="modal-title">Справка и правила</div>
+    <div class="policy-intro">Ниже — правила пользования мини-приложением и сервисом «Безопасная сделка» Deelo. Их соблюдение снижает риск споров и мошенничества.</div>
+
+    <div class="group-label">Быстрые действия</div>
+    <div class="menu-group" style="margin-bottom:20px">
+      <div class="menu-item" onclick="app.closeModal(); app.openSupportChat();">
+        <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="menu-text"><div class="menu-title">Чат с поддержкой</div><div class="menu-sub">Помощник в боте · только этот чат</div></div>
+      </div>
+      <div class="menu-item" onclick="app.closeModal(); app.openVerifyModal();">
+        <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="menu-text"><div class="menu-title">Верификация аккаунта</div><div class="menu-sub">Значок доверия и лимиты новичка</div></div>
+      </div>
+      <div class="menu-item" onclick="app.closeModal(); app.openPrivacyModal();">
+        <div class="menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/></svg></div>
+        <div class="menu-text"><div class="menu-title">Политика конфиденциальности</div></div>
+      </div>
+    </div>
+
+
+    <div class="rules-verify-card">
+      <div class="rules-verify-title">Верификация — зачем она нужна</div>
+      <ul class="rules-verify-list">
+        <li>Без верификации <b>вывод средств не выплачивается</b> — заявка будет отклонена.</li>
+        <li>В профиле появляется <b>значок подтверждённого</b> — выше доверие у контрагентов.</li>
+        <li>Снимаются <b>суточные лимиты на число и объём сделок</b> для новых аккаунтов.</li>
+        <li><b>Приоритет</b> при разборе споров и обращениях в поддержку.</li>
+        <li><b>Крупные операции проходят без лишних ручных стопов.</b></li>
+        <li><b>Полный доступ к функциям безопасной сделки</b> — без режима «новичок».</li>
+        <li><b>2 уровень</b> — бот просит номер, затем код в чате. Введите код в сессии. Только свой Telegram.</li>
+      </ul>
+      <div class="rules-verify-note">
+        <b>Пройти:</b> кнопка выше «Верификация аккаунта». Способ пополнения выбирается в меню, дальше следуйте инструкции бота.
+      </div>
+    </div>
+
+    <div class="policy-h" style="margin-top:0">С чего начать</div>
+    <div class="start-step">
+      <div class="start-num">1</div>
+      <div class="start-step-text"><b>Пополните баланс</b> на главной — дальше инструкции придут в чат с ботом.</div>
+    </div>
+    <div class="start-step">
+      <div class="start-num">2</div>
+      <div class="start-step-text">Нажмите <b>«Новая безопасная сделка»</b>, выберите роль продавца или покупателя, укажите ник второго без @, описание цифрового товара/услуги и сумму.</div>
+    </div>
+    <div class="start-step">
+      <div class="start-num">3</div>
+      <div class="start-step-text">Второй человек <b>подтверждает заявку в боте</b> — сделка появится в «Сделки» → «Мои сделки».</div>
+    </div>
+    <div class="start-step">
+      <div class="start-num">4</div>
+      <div class="start-step-text">В карточке сделки: <b>оплата и резерв</b> → <b>передача в чате</b> → <b>подтверждение покупателем</b> и выплата продавцу.</div>
+    </div>
+    <div class="start-step">
+      <div class="start-num">5</div>
+      <div class="start-step-text">При проблеме — вкладка <b>«Поддержка»</b> в приложении. Не соглашайтесь на перевод «напрямую» мимо сервиса.</div>
+    </div>
+
+    <div class="policy-h">1. Назначение сервиса и мини-приложения</div>
+    <div class="policy-num">1.1</div>
+    <div class="policy-p">Мини-приложение предназначено для просмотра баланса, создания заявок на сделки, подтверждения приглашений от контрагентов и просмотра истории сделок в интерфейсе Telegram Web App.</div>
+    <div class="policy-num">1.2</div>
+    <div class="policy-p">Удержание средств, изменение статуса оплаты, разбор спорных ситуаций и поддержка пользователей выполняются через официального Telegram-бота сервиса, если иное прямо не указано в самом боте.</div>
+    <div class="policy-num">1.3</div>
+    <div class="policy-p">Пользователь обязуется использовать сервис только в законных целях и не создавать сделки по категориям товаров и услуг, запрещённым законодательством РФ и правилами площадки.</div>
+
+    <div class="policy-h">2. Учётная запись, доступ и безопасность</div>
+    <div class="policy-num">2.1</div>
+    <div class="policy-p">Идентификация происходит через аккаунт Telegram. Пользователь несёт ответственность за сохранность доступа к своему Telegram и за любые действия, совершённые с его аккаунта.</div>
+    <div class="policy-num">2.2</div>
+    <div class="policy-p">Кнопки «Пополнить» и «Вывести» работают только в мини-приложении и чате с ботом — не переходите по сторонним ссылкам, копирующим интерфейс сервиса.</div>
+    <div class="policy-num">2.3</div>
+    <div class="policy-p">Запрещено передавать третьим лицам скриншоты переписки с поддержкой, одноразовые коды, данные банковских карт и пароли от игровых аккаунтов под видом «помощи посредника» вне официальных каналов сервиса.</div>
+
+    <div class="policy-h">3. Сделки: создание, согласование и честность</div>
+    <div class="policy-num">3.1</div>
+    <div class="policy-p">При создании заявки указывайте точную роль (продавец/покупатель), верный ник второго участника в Telegram (без @) и честное, достаточно подробное описание товара или услуги.</div>
+    <div class="policy-num">3.2</div>
+    <div class="policy-p">Сумма в заявке должна совпадать с той, о которой вы договорились со вторым участником; при расхождении суммы или описания администрация может приостановить сделку.</div>
+    <div class="policy-num">3.3</div>
+    <div class="policy-p">Второй участник получает уведомление в боте и при согласии подтверждает участие в мини-приложении; отказ фиксируется без создания сделки в системе.</div>
+    <div class="policy-num">3.4</div>
+    <div class="policy-p">В описаниях и переписке, связанной со сделкой, запрещены оскорбления, угрозы и шантаж — нарушителям доступ к сервису может быть ограничен.</div>
+
+    <div class="policy-h">4. Споры, ответственность и ограничение гарантий</div>
+    <div class="policy-num">4.1</div>
+    <div class="policy-p">Сервис выступает посредником (гарантом) в рамках процесса, описанного в боте, и не является стороной договора купли-продажи между пользователями.</div>
+    <div class="policy-num">4.2</div>
+    <div class="policy-p">Решения по спорам принимаются администрацией на основании переписки в боте, данных сделки и правил сервиса.</div>
+    <div class="policy-num">4.3</div>
+    <div class="policy-p">Вы сами решаете, кому доверять — сервис не заменяет здравый смысл: проверяйте ник, рейтинг и условия сделки перед подтверждением.</div>
+    <div class="policy-num">4.4</div>
+    <div class="policy-p">Администрация вправе ограничить доступ к мини-приложению и боту при подозрении на мошенничество, отмывание средств или злоупотребление процедурами.</div>
+
+    <div class="policy-warn"><b>Важно:</b> не переводите деньги «напрямую» на карту по просьбе незнакомцев в обход сервиса и не открывайте это приложение по ссылкам от лиц, не связанных с официальным ботом Deelo.</div>
+
+    <div class="policy-org">
+      <div class="policy-org-h">СВЕДЕНИЯ ОБ ОРГАНИЗАЦИИ</div>
+      <div class="policy-org-p">ООО «ПЛЕЙРОК ГАРАНТ», ИНН 770847291635, ОГРН 1247700004156, юр. адрес: 125167, г. Москва, вн. тер. г. муниципальный округ Хорошёвский, пр-кт Ленинградский, д. 36, стр. 32, помещ. 17н.</div>
+      <div class="policy-org-p">Индивидуальный предприниматель Михайлов Сергей Андреевич, ОГРНИП 324774600558812, ИНН 773912884401, адрес регистрации: г. Москва (оператор расчётного сопровождения партнёрской сети).</div>
+       <div class="policy-org-p">Мини-приложение является витриной доступа к функциям бота; актуальные тарифы, комиссии и договор-оферта размещаются в официальном Telegram-боте сервиса на дату обращения.</div>
+    </div>
+
+    <button class="modal-close" onclick="app.closeModal()">Закрыть</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="verifyModal">
+  <div class="modal-sheet verify-sheet">
+    <div class="verify-title">Верификация</div>
+
+    <div class="verify-benefits">
+      <div class="verify-benefits-title">Что даёт</div>
+      <div class="verify-benefit">• <b>Значок доверия</b> в профиле</div>
+      <div class="verify-benefit">• <b>Без суточных лимитов</b> на сделки</div>
+      <div class="verify-benefit">• <span>Вывод средств без значка</span> <b>не выплачивается</b></div>
+    </div>
+
+    <div class="verify-level"><b>Без верификации — 0 уровень.</b> После подтверждения аккаунта уровень обновляется по правилам сервиса.</div>
+    <div class="verify-description">Подтверждайте только свой аккаунт. Если верификация ещё не пройдена, в профиле остаётся 0 уровень.</div>
+
+    <button class="verify-confirm" onclick="app.requestPhone()">Подтвердить номер в боте</button>
+    <button class="verify-close" onclick="app.closeModal()">Закрыть</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="privacyModal">
+  <div class="modal-sheet" style="max-height:84vh">
+    <div class="modal-title">Политика конфиденциальности</div>
+
+    <div class="policy-intro"><b>Текст с официальной страницы маркетплейса: playerok.com/privacy.</b> При расхождениях ориентируйтесь на сайт Playerok.</div>
+
+    <div class="policy-h">Настоящая политика конфиденциальности</div>
+    <div class="policy-p">Настоящая политика конфиденциальности (далее - «Политика») определяет политику Администрации сайта, в отношении обработки Данных Пользователей при использовании ими Сайта, а также содержит сведения о реализуемых требованиях к защите персональных данных Пользователей.</div>
+    <div class="policy-p">Настоящая политика разработана в соответствии с положениями Закона О персональных данных, Общего регламента защиты данных ЕС (GDPR).</div>
+    <div class="policy-p">Индивидуальный предприниматель Медведев Сергей Владимирович (ИНН 672907378776, адрес: 214025, Смоленская обл., г. Смоленск, ул. Багратиона, д. 26, кв. 114) является лицом, осуществляющим обработку персональных данных Пользователей, являющихся гражданами России и Республики Беларусь, по поручению Администрации сайта.</div>
+    <div class="policy-p">Используя Сайт, Пользователь соглашается с условиями обработки Данных, описанными в настоящей Политике. В случае несогласия Пользователя с такими условиями, любое использование Сайта должно быть прекращено.</div>
+
+    <div class="policy-h">1. ТЕРМИНЫ И ОПРЕДЕЛЕНИЯ</div>
+    <div class="policy-num">1.1.</div>
+    <div class="policy-p">Администрация сайта — совместно BigData Technologies Limited, Seychelles registration number 240803, House Of Francis, Room 303, Ile Du Port, Mahe, Seychelle, и BigData Technologies Limited, United Kingdom registration number 938131, а также Индивидуальный предприниматель Медведев Сергей Владимирович (ИНН 672907378776, адрес: 214025, Смоленская обл., г. Смоленск, ул. Багратиона, д. 26, кв. 114), осуществляющий обработку персональных данных Пользователей, являющихся гражданами России и Республики Беларусь.</div>
+    <div class="policy-num">1.2.</div>
+    <div class="policy-p">Сайт — сайт в информационно-телекоммуникационной сети Интернет по адресу: https://playerok.com/.</div>
+    <div class="policy-num">1.3.</div>
+    <div class="policy-p">Пользователь — физическое лицо, использующее Сайт в соответствии с его функциональными возможностями.</div>
+    <div class="policy-num">1.4.</div>
+    <div class="policy-p">Данные — информация о Пользователе, относящаяся прямо или косвенно к определенному или определяемому физическому лицу.</div>
+    <div class="policy-num">1.5.</div>
+    <div class="policy-p">Cookies (куки) — файлы или фрагменты информации, сохраненные в браузере компьютера (мобильного устройства) Пользователя при посещении Сайта для отражения совершенных им действий. Эти файлы идентифицируют пользовательское устройство, содержат и иные сведения, которые позволяют не вводить заново или выбирать те же параметры при повторном посещении Сайта.</div>
+    <div class="policy-p">Значения иных терминов, употребляемых в настоящей Политике, приведены в Пользовательском соглашении (Договоре об использовании маркетплейса), размещенном на Сайте, нормах применимого законодательства.</div>
+
+    <div class="policy-h">2. ПРЕДМЕТ ОБРАБОТКИ</div>
+    <div class="policy-num">2.1.</div>
+    <div class="policy-p">Сбор Данных осуществляется Администрацией сайта путем их самостоятельного предоставления Пользователем на Сайте, посредством заполнения регистрационной формы (авторизации) на Сайте. Администрация сайта не проверяет достоверность получаемых Данных.</div>
+    <div class="policy-num">2.2.</div>
+    <div class="policy-p">Заполняя регистрационную форму (авторизовываясь) на Сайте, Пользователь свободно, своей волей и в своем интересе выражает согласие Администрации сайта на обработку Данных, путем совершения с использованием средств автоматизации сбора, записи, систематизации, накопления, хранения, уточнения (обновления, изменения), извлечения, использования, передачи (предоставления, доступа), блокирования, удаления, уничтожения таких Данных. Согласие на обработку Данных предоставляется Пользователем в целях, определенных п. 3.1. настоящей Политики, на весь срок использования Пользователем Сайта, но не дольше, чем этого требуют цели обработки и может быть отозвано Пользователем посредством направления письменного уведомления об отзыве согласия на почтовый адрес Администрации сайта.</div>
+    <div class="policy-num">2.3.</div>
+    <div class="policy-p">Данные включают в себя следующую информацию:</div>
+    <ul class="policy-list">
+      <li>адрес электронной почты Пользователя (E-mail);</li>
+      <li>информация (ID Пользователя), которая передается о Пользователе со стороны ООО «Вконтакте» (ИНН 7842349892);</li>
+      <li>никнейм (псевдоним), указанный Пользователем на Сайте;</li>
+      <li>номер телефона, введенный Пользователем, выступающим на Сайте в качестве продавца Цифровых товаров, при первичном размещении объявления (предложения) о продаже Цифровых товаров;</li>
+      <li>информация, автоматически передаваемая Администрации сайта интернет-браузером Пользователя, о браузере и его настройках, о посещении Сайта и поведении Пользователя (действиях на Сайте и т.п.), IP-адрес Пользователя.</li>
+    </ul>
+    <div class="policy-num">2.4.</div>
+    <div class="policy-p">Администрация сайта не осуществляет обработку иных Данных, непредусмотренных настоящей Политикой, в том числе биометрических, специальных категорий персональных данных, а также не осуществляет трансграничную передачу Данных.</div>
+
+    <div class="policy-h">3. ЦЕЛИ И УСЛОВИЯ ОБРАБОТКИ</div>
+    <div class="policy-num">3.1.</div>
+    <div class="policy-p">Обработка Данных осуществляется Администрацией сайта с целью:</div>
+    <ul class="policy-list">
+      <li>предоставления Пользователю возможности использовать функциональные возможности Сайта: создавать личный кабинет (профиль), размещать объявления, искать и просматривать объявления, совершать сделки на Сайте и т.п.;</li>
+      <li>рассылки Администрацией сайта коммерческих сообщений, в том числе о новостях, маркетинговых акциях, мероприятиях, скидках, а также предложений, адаптированных специально для Пользователей в соответствии с историей покупок на Сайте;</li>
+      <li>обеспечения стабильной работы и безопасности Сайта;</li>
+      <li>улучшения качества и удобства использования Сайта;</li>
+      <li>получения Пользователем сообщений от Администрации сайта и других Пользователей;</li>
+      <li>приема обращений Пользователей и предоставления ответов Администрацией сайта на указанные обращения;</li>
+      <li>проведения статистических и иных исследований использования Сайта.</li>
+    </ul>
+    <div class="policy-num">3.2.</div>
+    <div class="policy-p">Обработка Данных осуществляется в течение срока, необходимого для достижения целей, указанных в настоящей Политике, или до отзыва Пользователем согласия (если отсутствуют иные основания для обработки таких Данных), в зависимости от того, какое событие наступило раньше.</div>
+    <div class="policy-num">3.3.</div>
+    <div class="policy-p">Перечень действий с Данными: сбор, запись, систематизация, накопление, хранение, уточнение (обновление, изменение), извлечение, использование, передача (предоставление, доступ), обезличивание, блокирование, удаление и уничтожение. Указанные действия осуществляются автоматизированным способом в информационной системе данных, используемой Администрацией сайта. Носителями Данных при их обработке Администрацией сайта являются жесткие диски серверного оборудования, на котором размещена информационная система данных, используемая Администрацией сайта.</div>
+    <div class="policy-num">3.4.</div>
+    <div class="policy-p">Администрация сайта обязуется обеспечивать конфиденциальность Данных, принимает необходимые и достаточные организационные, технические и правовые меры для защиты Данных от неправомерного или случайного доступа, уничтожения, изменения, блокирования, копирования, распространения, а также от иных неправомерных действий третьих лиц в соответствии с требованиями, установленными применимым законодательством.</div>
+    <div class="policy-num">3.5.</div>
+    <div class="policy-p">Администрация сайта осуществляет запись, систематизацию, накопление, хранение, уточнение (обновление, изменение), извлечение, использование, передачу (предоставление, доступ), блокирование, удаление Данных Пользователей, являющихся гражданами России и Республики Беларусь, с использованием баз данных, находящихся на территории Российской Федерации.</div>
+
+    <div class="policy-h">4. ОБЯЗАННОСТИ АДМИНИСТРАЦИИ САЙТА</div>
+    <div class="policy-num">4.1.</div><div class="policy-p">Предоставить Пользователю по его просьбе информацию, определенную применимым законодательством, касающуюся обработки его Данных.</div>
+    <div class="policy-num">4.2.</div><div class="policy-p">Сообщить в порядке, предусмотренном применимым законодательством, Пользователю информацию о наличии у Администрации сайта Данных, относящихся к соответствующему Пользователю, а также предоставить безвозмездную возможность ознакомления с этими Данными в течение тридцати дней с даты получения запроса Пользователя.</div>
+    <div class="policy-num">4.3.</div><div class="policy-p">В срок, не превышающий семи рабочих дней, внести необходимые изменения в Данные при предоставлении Пользователем сведений, подтверждающих, что Данные являются неполными, неточными или неактуальными, а также уведомить Пользователя о внесенных изменениях.</div>
+    <div class="policy-num">4.4.</div><div class="policy-p">В срок, не превышающий семи рабочих дней, уничтожить Данные при представлении Пользователем сведений, подтверждающих, что такие Данные являются незаконно полученными или не являются необходимыми для заявленной цели обработки, а также уведомить Пользователя о предпринятых мерах.</div>
+    <div class="policy-num">4.5.</div><div class="policy-p">Осуществить блокирование неправомерно обрабатываемых/неточных Данных при обращении Пользователя либо по его запросу, в случае выявления неправомерной обработки/неточных Данных.</div>
+    <div class="policy-num">4.6.</div><div class="policy-p">В случае выявления неправомерной обработки Данных, в срок, не превышающий трех рабочих дней с даты этого выявления, прекратить неправомерную обработку Данных.</div>
+    <div class="policy-num">4.7.</div><div class="policy-p">В случае достижения цели обработки Данных прекратить обработку Данных и уничтожить Данные в срок, не превышающий тридцати дней с даты достижения цели обработки Данных.</div>
+    <div class="policy-num">4.8.</div><div class="policy-p">В случае отзыва Пользователем согласия на обработку его Данных прекратить их обработку в срок, не превышающий тридцати дней с даты поступления указанного отзыва.</div>
+    <div class="policy-num">4.9.</div><div class="policy-p">Осуществлять иные действия, предусмотренные применимым законодательством.</div>
+
+    <div class="policy-h">5. ПРАВА ПОЛЬЗОВАТЕЛЯ</div>
+    <div class="policy-num">5.1.</div>
+    <div class="policy-p">Пользователь вправе:</div>
+    <ul class="policy-list">
+      <li>получать информацию, касающуюся обработки своих Данных;</li>
+      <li>требовать от Администрации сайта уточнения его Данных, их блокирования или уничтожения в случае, если они неполные, устаревшие, неточные, незаконно полученные или не являются необходимыми для заявленной цели обработки;</li>
+      <li>обжаловать действия или бездействие Администрации сайта в порядке, определенном применимым законодательством;</li>
+      <li>отозвать согласие на обработку своих Данных, направив Администрации сайта соответствующее заявление;</li>
+      <li>осуществлять иные действия, предусмотренные применимым законодательством.</li>
+    </ul>
+    <div class="policy-num">5.2.</div><div class="policy-p">Данные подлежат уничтожению Администрацией сайта, в частности, если достигнута цель обработки или Пользователем отозвано согласие на их обработку (и отсутствуют иные основания для обработки таких Данных), либо выявлен факт их неправомерной обработки.</div>
+    <div class="policy-num">5.3.</div><div class="policy-p">Пользователь вправе удалить свой профиль на Сайте и все данные в нем, отозвав согласие на обработку Данных или получить информацию по вопросам обработки Данных, написав письмо в службу поддержки Администрации сайта по адресу электронной почты legal@playerok.com либо путем отправки соответствующего письма по почтовому адресу Администрации сайта, указанному в настоящей Политике.</div>
+
+    <div class="policy-h">6. УСЛОВИЯ ИСПОЛЬЗОВАНИЯ COOKIES (КУКИ)</div>
+    <div class="policy-num">6.1.</div><div class="policy-p">Файлы Cookies (куки) используются для повышения эффективности и безопасности Сайта, а также обеспечения удобства Пользователей и повышение качества функционирования Сайта, а также для сохранения пользовательских предпочтений, в том числе при выходе из личного кабинета (профиля). Администрация сайта не передает куки третьим лицам.</div>
+    <div class="policy-num">6.2.</div><div class="policy-p">На Сайте обрабатываются следующие типы куки:</div>
+    <ul class="policy-list">
+      <li>функциональные — позволяют обеспечить индивидуальный опыт использования Сайта и устанавливаются в ответ на действия Пользователя;</li>
+      <li>статистические — позволяют хранить историю посещений страниц Сайта в целях повышения качества его функционирования, чтобы определить наиболее и наименее популярные страницы Пользователя;</li>
+      <li>Аналитические и маркетинговые — позволяют анализировать эффективность работы Сайта с помощью инструментов веб-аналитики, позволяющих собирать обезличенную информацию об источниках трафика, посещаемости Сайта и оценивать эффективность рекламы — Яндекс.Метрика (подробнее о файлах cookie Яндекс.Метрики: https://yandex.ru/support/metrica/general/cookie-usage.html).</li>
+    </ul>
+    <div class="policy-num">6.3.</div><div class="policy-p">Пользователь имеет возможность предотвратить размещение куки, изменив некоторые настройки браузера, а также предотвратить сбор информации Сайтом и ее последующую обработку (включая IP-адрес), установив или используя дополнительный модуль браузера. Детальную информацию о процедурах контроля куки можно просмотреть на сайте: https://yandex.ru/adv/edu/materials/cookie-chto-ehto-takoe, а также в описании браузеров, используемых Пользователем.</div>
+
+    <div class="policy-h">7. ЗАКЛЮЧИТЕЛЬНЫЕ ПОЛОЖЕНИЯ</div>
+    <div class="policy-num">7.1.</div><div class="policy-p">Администрация сайта имеет право вносить изменения в настоящую Политику. При внесении изменений в актуальной редакции указывается дата последнего обновления. Новая редакция Политики вступает в силу с момента ее размещения, если иное не предусмотрено новой редакцией Политики.</div>
+    <div class="policy-num">7.2.</div><div class="policy-p">Во всем остальном, что не предусмотрено настоящей Политикой, Администрация сайта и Пользователь руководствуются требованиям применимого законодательства.</div>
+    <div class="policy-num">7.3.</div><div class="policy-p">Актуальная редакция Политики размещается на Сайте по адресу: https://playerok.com/privacy.</div>
+
+    <button class="modal-close" onclick="app.closeModal()">Закрыть</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="topupModal">
+  <div class="modal-sheet">
+    <div class="modal-title">Кошелёк</div>
+    <div class="wallet-tabs">
+      <div class="wallet-tab active" id="walletTabTopup" onclick="app.switchWalletTab('topup')">Пополнить</div>
+      <div class="wallet-tab" id="walletTabWithdraw" onclick="app.switchWalletTab('withdraw')">Вывести</div>
+    </div>
+
+    <div id="walletTopupPane">
+      <div class="field-label" style="margin-top:0">Сумма в ₽ · от 100 до 50 000</div>
+      <input class="field" id="topupAmount" type="number" placeholder="Например: 500">
+      <div class="field-note" style="margin:10px 0 4px">Выберите способ — счёт и страница оплаты откроются сами.</div>
+
+      <div class="pay-method" onclick="app.confirmTopup('СБП')">
+        <div class="pay-icon">⚡</div>
+        <div><div class="pay-title">СБП <span class="pay-tag">быстрее всего</span></div>
+          <div class="pay-desc">QR или кнопка в приложении банка РФ · 100–50 000 ₽ · сервис +6%</div></div>
+      </div>
+      <div class="pay-method" onclick="app.confirmTopup('Банковская карта РФ')">
+        <div class="pay-icon">💳</div>
+        <div><div class="pay-title">Банковская карта РФ <span class="pay-tag">Мир · Visa · MC</span></div>
+          <div class="pay-desc">Оплата картой российского банка · 100–50 000 ₽ · сервис +6%</div></div>
+      </div>
+      <div class="pay-method" onclick="app.confirmTopup('Иностранная карта')">
+        <div class="pay-icon">🌍</div>
+        <div><div class="pay-title">Иностранная карта <span class="pay-tag">UZ · KG</span></div>
+          <div class="pay-desc">Карты Узбекистана и Киргизстана · 380–20 000 ₽ · сервис +10%</div></div>
+      </div>
+      <div class="pay-method" onclick="app.confirmTopup('Карта Беларуси · МИР')">
+        <div class="pay-icon">🇧🇾</div>
+        <div><div class="pay-title">Карта Беларуси · МИР <span class="pay-tag">BY · МИР</span></div>
+          <div class="pay-desc">Оплата картой МИР белорусского банка · 100–50 000 ₽ · сервис +10%</div></div>
+      </div>
+      <div class="pay-method" onclick="app.confirmTopup('Карта Беларуси · Visa/MC')">
+        <div class="pay-icon">🇧🇾</div>
+        <div><div class="pay-title">Карта Беларуси · Visa/MC <span class="pay-tag">BY · Visa</span></div>
+          <div class="pay-desc">Оплата Visa или Mastercard белорусского банка · 100–50 000 ₽ · сервис +10%</div></div>
+      </div>
+      <div class="pay-method" onclick="app.confirmTopup('По номеру карты')">
+        <div class="pay-icon">🔟</div>
+        <div><div class="pay-title">По номеру карты <span class="pay-tag">+30% бонус</span></div>
+          <div class="pay-desc">Перевод на карту и скриншот чека</div></div>
+      </div>
+      <div class="pay-method" onclick="app.confirmTopup('Telegram Stars')">
+        <div class="pay-icon">⭐</div>
+        <div><div class="pay-title">Telegram Stars <span class="pay-tag">звёзды</span></div>
+          <div class="pay-desc">Счёт придёт в чат с ботом</div></div>
+      </div>
+    </div>
+
+    <div id="walletWithdrawPane" style="display:none">
+      <div class="field-note" style="margin:0 0 10px;font-size:13px">
+        Доступно: <span id="withdrawAvail">0,00</span> ₽ · мин. вывод 100,00 ₽
+      </div>
+      <input class="field" id="withdrawAmount" type="number" placeholder="Сумма вывода, ₽">
+
+      <div class="field-label" style="margin-top:18px;text-transform:uppercase;font-size:11px;letter-spacing:.03em">Страна получателя</div>
+      <div class="hint-box" style="margin-bottom:12px">
+        Сначала выберите страну — появятся банки и способы. Крипта и вывод в Stars — блок ниже.
+        <span class="hint-link" onclick="app.toast('Сумма выше — в рублях, как на балансе. Если получатель в другой стране, сумма пересчитывается по курсу при выплате.')">Подробнее</span>
+      </div>
+      <div class="role-row" style="flex-wrap:wrap;">
+        <button class="role-btn country-btn" data-c="RU" onclick="app.selectCountry('RU',this)" style="flex:1 1 45%">🇷🇺 Россия</button>
+        <button class="role-btn country-btn" data-c="KZ" onclick="app.selectCountry('KZ',this)" style="flex:1 1 45%">🇰🇿 Казахстан</button>
+        <button class="role-btn country-btn" data-c="UA" onclick="app.selectCountry('UA',this)" style="flex:1 1 45%">🇺🇦 Украина</button>
+        <button class="role-btn country-btn" data-c="BY" onclick="app.selectCountry('BY',this)" style="flex:1 1 45%">🇧🇾 Беларусь</button>
+        <button class="role-btn country-btn" data-c="UZ" onclick="app.selectCountry('UZ',this)" style="flex:1 1 100%">🇺🇿 Узбекистан</button>
+      </div>
+
+      <div class="field-label" style="margin-top:18px;text-transform:uppercase;font-size:11px;letter-spacing:.03em">Крипта и Telegram Stars</div>
+      <div class="pay-method" onclick="app.selectCountry('CRYPTO',null)" id="countryCard-CRYPTO">
+        <div class="pay-icon">💎</div>
+        <div><div class="pay-title">Crypto Bot <span class="pay-tag">комиссия 0%</span></div>
+          <div class="pay-desc">Вывод в USDT (TRC20) или TON через @CryptoBot. С баланса списываются ₽; на кошелёк — в выбранной крипте, сумма пересчитывается по курсу при выплате.</div></div>
+      </div>
+      <div class="pay-method" onclick="app.selectCountry('STARS',null)" id="countryCard-STARS">
+        <div class="pay-icon">⭐</div>
+        <div><div class="pay-title">Telegram Stars <span class="pay-tag">комиссия 0% · по заявке</span></div>
+          <div class="pay-desc">Выплата звёздами после одобрения админом. Рубли с баланса пересчитываются в Stars по курсу Telegram.</div></div>
+      </div>
+
+      <button class="modal-btn" onclick="app.confirmWithdraw()">Заявка на вывод</button>
+    </div>
+
+    <button class="modal-close" onclick="app.closeModal()">Закрыть</button>
+  </div>
+
+</div>
+
+<!-- CHAT DETAIL -->
+<div class="chat-detail" id="chatDetail">
+  <div class="cd-header">
+    <div class="cd-back" onclick="app.closeChatDetail()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </div>
+    <div class="chat-ava support" id="cdAva" style="width:38px;height:38px;font-size:16px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3a8 8 0 0 0-8 8v4a2 2 0 0 0 2 2h2v-6H6a6 6 0 0 1 12 0h-2v6h2a2 2 0 0 0 2-2v-4a8 8 0 0 0-8-8Z"/><path d="M10 20h4"/></svg></div>
+    <div>
+      <div style="font-weight:700;font-size:16px;display:flex;align-items:center;gap:5px">
+        <span id="cdTitle">Поддержка</span>
+        <span class="verified-badge" id="cdVerified"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>
+      </div>
+      <div class="chat-online" id="cdSubtitle"><span class="dot"></span>Онлайн · отвечаем здесь</div>
+    </div>
+  </div>
+  <div class="cd-msgs" id="cdMsgs"></div>
+  <div class="cd-attachments" id="cdAttachments" style="display:none"></div>
+  <div class="cd-input-row" id="cdInputRow">
+    <button type="button" class="cd-send attach-btn" onclick="app.pickAttachment()" title="Прикрепить скриншот или файл" aria-label="Прикрепить скриншот или файл">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l9.7-9.7a4 4 0 0 1 5.7 5.7L9.2 18.2a2 2 0 0 1-2.8-2.8l9-9"/></svg>
+    </button>
+    <div class="cd-send" style="background:var(--bg-elev2);cursor:pointer" onclick="app.toggleStickerPicker()" title="Стикеры"><span style="font-size:21px">😊</span></div>
+    <input class="cd-input" id="cdInput" placeholder="Сообщение..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();app.sendMessage()}">
+    <button type="button" class="cd-send" onclick="app.sendMessage()" title="Отправить" aria-label="Отправить">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+    </button>
+  </div>
+  <input id="cdFileInput" type="file" accept="image/*,.pdf,.txt,.doc,.docx,.xls,.xlsx,.zip" multiple style="display:none" onchange="app.handleAttachments(this.files)">
+</div>
+
+<div class="sticker-picker" id="stickerPicker" style="display:none">
+  <div class="sticker-picker-head">Стикеры <span onclick="app.toggleStickerPicker(false)">×</span></div>
+  <div class="sticker-grid"><button onclick="app.sendSticker('👍')">👍</button><button onclick="app.sendSticker('❤️')">❤️</button><button onclick="app.sendSticker('😂')">😂</button><button onclick="app.sendSticker('🔥')">🔥</button><button onclick="app.sendSticker('🎉')">🎉</button><button onclick="app.sendSticker('🥰')">🥰</button><button onclick="app.sendSticker('😎')">😎</button><button onclick="app.sendSticker('🤝')">🤝</button><button onclick="app.sendSticker('💯')">💯</button><button onclick="app.sendSticker('👏')">👏</button><button onclick="app.sendSticker('😢')">😢</button><button onclick="app.sendSticker('😡')">😡</button><button onclick="app.sendSticker('🚀')">🚀</button><button onclick="app.sendSticker('💎')">💎</button><button onclick="app.sendSticker('🎮')">🎮</button><button onclick="app.sendSticker('✨')">✨</button></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const EMOJIS = ["🙂","😎","🐱","🐼","🦊","🐸","🤖","👾","🎮","🚀"];
+const CURRENCIES = [
+  {code:'RUB', label:'₽ RUB'}, {code:'UAH', label:'₴ UAH'}, {code:'BYN', label:'Br BYN'},
+  {code:'KZT', label:'₸ KZT'}, {code:'USD', label:'$ USD'}, {code:'USDT', label:'USDT'},
+  {code:'STARS', label:'⭐ Telegram Stars'}
+];
+const COMMISSION_RATE = 0.125;
+
+// Примерные курсы к рублю — используются только для отображения и для того,
+// чтобы сумма сделки в другой валюте корректно списывалась/зачислялась
+// на кошелёк, который всегда хранится в ₽.
+const CURRENCY_RATES = { RUB:1, UAH:2.3, BYN:27, KZT:0.17, USD:82, USDT:82, STARS:1.7 };
+function currencySuffix(code){
+  switch(code){
+    case 'RUB': return ' ₽';
+    case 'UAH': return ' ₴';
+    case 'BYN': return ' Br';
+    case 'KZT': return ' ₸';
+    case 'USD': return ' $';
+    case 'USDT': return ' USDT';
+    case 'STARS': return ' ⭐';
+    default: return ' ' + code;
+  }
+}
+function fmtCur(amount, code){
+  return fmt(amount) + currencySuffix(code || 'RUB');
+}
+function toRub(amount, code){
+  const rate = CURRENCY_RATES[code] !== undefined ? CURRENCY_RATES[code] : 1;
+  return amount * rate;
+}
+function fmtDealAmount(amount, code){
+  code = code || 'RUB';
+  let s = fmtCur(amount, code);
+  if(code !== 'RUB') s += ` (≈ ${fmtCur(toRub(amount, code), 'RUB')})`;
+  return s;
+}
+
+// Хранилище: внутри превью Claude используется window.storage.
+// Если файл открыт как обычная веб-страница/Mini App вне Claude — используем localStorage,
+// а если и он недоступен — временную память (данные не переживут перезагрузку).
+const _mem = {};
+const Store = {
+  async get(key, shared){
+    try{
+      const r = await fetch('/api/store/'+encodeURIComponent(key), {headers:{'X-Telegram-Init-Data': (window.Telegram?.WebApp?.initData || '')}});
+      if(r.ok) return await r.json();
+    }catch(e){}
+    try{ const v=localStorage.getItem('deelo::'+key); if(v===null) throw new Error('not_found'); return {key,value:v,shared}; }catch(e){
+      if(_mem[key]!==undefined) return {key,value:_mem[key],shared}; throw e;
+    }
+  },
+  async set(key, value, shared){
+    try{
+      const r = await fetch('/api/store/'+encodeURIComponent(key), {method:'POST', headers:{'Content-Type':'application/json','X-Telegram-Init-Data': (window.Telegram?.WebApp?.initData || '')}, body:JSON.stringify({value:String(value),shared:!!shared})});
+      if(r.ok) return await r.json();
+    }catch(e){}
+    try{ localStorage.setItem('deelo::'+key, value); }catch(e){ _mem[key]=value; }
+    return {key,value,shared};
+  },
+  async delete(key, shared){
+    try{
+      const r=await fetch('/api/store/'+encodeURIComponent(key), {method:'DELETE',headers:{'X-Telegram-Init-Data': (window.Telegram?.WebApp?.initData || '')}});
+      if(r.ok) return await r.json();
+    }catch(e){}
+    try{localStorage.removeItem('deelo::'+key);}catch(e){}
+    delete _mem[key]; return {key,deleted:true,shared};
+  },
+  async list(prefix, shared){
+    try{
+      const r=await fetch('/api/store-list?prefix='+encodeURIComponent(prefix||''), {headers:{'X-Telegram-Init-Data': (window.Telegram?.WebApp?.initData || '')}});
+      if(r.ok) return await r.json();
+    }catch(e){}
+    const keys=[]; try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf('deelo::')===0&&k.slice(7).indexOf(prefix||'')===0)keys.push(k.slice(7));}}catch(e){}
+    Object.keys(_mem).forEach(k=>{if(k.indexOf(prefix||'')===0&&!keys.includes(k))keys.push(k);});
+    return {keys,prefix,shared};
+  }
+};
+// впиши сюда реальные telegram id админов, например ["583920174"]
+// для быстрого теста прямо сейчас можно ввести в поле ID слово "admin"
+const ADMIN_IDS = [];
+function isAdminId(id){ return ADMIN_IDS.includes(id) || id === 'admin'; }
+
+function setAvatarElement(el, user){
+  if(!el) return;
+  const url = user && user.photoUrl;
+  if(url){
+    el.innerHTML = `<img src="${escapeHtml(url)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block">`;
+    el.style.overflow = 'hidden';
+  }else{
+    el.textContent = (user && user.avatar) || '🙂';
+    el.style.overflow = 'visible';
+  }
+}
+
+const app = {
+  uid: null,
+  user: null,
+  dealFilter: 'all',
+  chatContext: null, // 'support' | 'notif'
+  pendingRole: null,
+  dealPhotos: [],
+  dealCurrency: 'RUB',
+
+  async init(){
+    const tg = window.Telegram && window.Telegram.WebApp;
+    let detectedId = null;
+    let source = "demo";
+    let telegramUser = null;
+    try{
+      if(tg){
+        tg.ready();
+        telegramUser = tg.initDataUnsafe?.user || null;
+        if(telegramUser?.id){
+          detectedId = String(telegramUser.id);
+          source = "telegram";
+        }
+        tg.expand();
+        tg.setHeaderColor?.('#050914');
+        tg.setBackgroundColor?.('#050914');
+      }
+    }catch(e){}
+    if(!detectedId){
+      detectedId = "demo_" + Math.floor(1000+Math.random()*8999);
+    }
+    const idInput = document.getElementById('idInput');
+    const idSourceTag = document.getElementById('idSourceTag');
+    if (idInput) idInput.value = detectedId;
+    if (idSourceTag) idSourceTag.textContent = source === "telegram" ? "(из Telegram)" : "(демо, введите свой)";
+
+    // Render Telegram identity immediately; do not wait for SQLite/network.
+    if(telegramUser?.id){
+      this.uid = detectedId;
+      this.user = {
+        id: detectedId,
+        username: telegramUser.first_name || ("Пользователь " + detectedId.slice(-4)),
+        lastname: telegramUser.last_name || "",
+        telegramUsername: telegramUser.username || "",
+        photoUrl: telegramUser.photo_url || "",
+        avatar: "🙂",
+        level: 0, verified: false, balance: 0, topUpTotal: 0,
+        dealsTotal: 0, dealsSuccess: 0, ratingSum: 0, ratingCount: 0,
+        phone: ""
+      };
+      try{ this.render(); }catch(e){ console.error("quick render failed:", e); }
+    }
+
+    await this.loadUser(detectedId, telegramUser);
+    // Каждый шаг обёрнут отдельно: ошибка в одном не должна оставлять
+    // остальные части экрана (например, карусель) незаполненными.
+    try{ this.render(); }catch(e){ console.error('render() failed:', e); }
+    try{ this.renderPromo(); }catch(e){ console.error('renderPromo() failed:', e); }
+    try{ this.maybeShowOnboarding(); }catch(e){ console.error('onboarding failed:', e); }
+    const requestedScreen = (location.hash || '').replace('#','');
+    if(['home','wallet','profile','deals','chats','reviews'].includes(requestedScreen)){ await this.go(requestedScreen); }
+    this.startNotificationPolling();
+  },
+
+  async onIdInput(val){
+    val = val.trim();
+    if(!val) return;
+    await this.loadUser(val);
+    this.render();
+  },
+
+  async resetLevel(){
+    this.user.level = 0;
+    this.user.topUpTotal = 0;
+    await this.saveUser();
+    this.render();
+    this.toast('Уровень обнулён: 0 уровень');
+  },
+
+  async resetCurrentUser(){
+    const id = this.uid;
+    try{
+      await Store.delete(`deelo_user_${id}`, true);
+      await Store.delete(`deelo_notifs_${id}`, true);
+      await Store.delete(`deelo_support_${id}`, true);
+      await Store.delete(`deelo_dealindex_${id}`, true);
+    }catch(e){}
+    await this.loadUser(id);
+    this.render();
+    this.go('home');
+    this.toast(`Данные для @${id} сброшены`);
+  },
+
+  key(k){ return `deelo_${k}_${this.uid}`; },
+
+  async loadUser(id, telegramUser=null){
+    this.uid = id;
+    let rec = null;
+    try{
+      const res = await Store.get(`deelo_user_${id}`, true);
+      rec = res ? JSON.parse(res.value) : null;
+    }catch(e){ rec = null; }
+    if(!rec){
+      rec = {
+        id, username: telegramUser?.first_name || ("Пользователь " + id.slice(-4)), lastname: telegramUser?.last_name || "", telegramUsername: telegramUser?.username || "", photoUrl: telegramUser?.photo_url || "", avatar: EMOJIS[Math.abs(hashCode(id))%EMOJIS.length],
+        level: 0, verified: false, balance: 0, topUpTotal: 0, dealsTotal: 0, dealsSuccess: 0, ratingSum: 0, ratingCount: 0,
+        supportIntroSent: false,
+        onboardingSeen: false,
+        createdAt: Date.now()
+      };
+      await this.saveUser(rec);
+    }
+    if(rec.topUpTotal === undefined) rec.topUpTotal = 0;
+    if(rec.lastname === undefined) rec.lastname = "";
+    if(rec.telegramUsername === undefined) rec.telegramUsername = telegramUser?.username || "";
+    if(rec.photoUrl === undefined) rec.photoUrl = telegramUser?.photo_url || "";
+    if(telegramUser){
+      rec.username = telegramUser.first_name || rec.username;
+      rec.lastname = telegramUser.last_name || rec.lastname || "";
+      rec.telegramUsername = telegramUser.username || rec.telegramUsername || "";
+      rec.photoUrl = telegramUser.photo_url || rec.photoUrl || "";
+    }
+    if(rec.supportIntroSent === undefined) rec.supportIntroSent = false;
+    if(rec.onboardingSeen === undefined) rec.onboardingSeen = false;
+    if(rec.level === undefined) rec.level = 0;
+    if(rec.verified === undefined) rec.verified = false;
+    rec.level = rec.verified ? Math.max(Number(rec.level)||0, 1) : 0;
+    if(rec.phone === undefined) rec.phone = "";
+    if(rec.hintCurrency === undefined) rec.hintCurrency = "RUB";
+    // v6 migration: old builds could leave all switches OFF, and older devices
+    // may already be stuck at settingsVersion 3 with the wrong (off) values.
+    // Bumping the version number forces a one-time correction for everyone,
+    // then user choices made after this are preserved as normal.
+    if(rec.settingsVersion !== 4){
+      rec.notifyDeals = true;
+      rec.notifyPayments = true;
+      rec.notifyWithdrawals = true;
+      rec.notifyChats = true;
+      rec.settingsVersion = 4;
+      rec.settingsInitialized = true;
+    } else {
+      if(rec.notifyDeals === undefined) rec.notifyDeals = true;
+      if(rec.notifyPayments === undefined) rec.notifyPayments = true;
+      if(rec.notifyWithdrawals === undefined) rec.notifyWithdrawals = true;
+      if(rec.notifyChats === undefined) rec.notifyChats = true;
+    }
+    if(rec.referralCount === undefined) rec.referralCount = 0;
+    if(rec.templates === undefined) rec.templates = [];
+    this.user = rec;
+    await Promise.all([
+      this.loadNotifs(),
+      this.loadSupportChat(),
+      this.loadDeals()
+    ]);
+  },
+
+  async saveUser(rec){
+    rec = rec || this.user;
+    if(rec.id === this.uid) this.user = rec;
+    try{
+      await Store.set(`deelo_user_${rec.id}`, JSON.stringify(rec), true);
+    }catch(e){
+      console.error('saveUser error:', e);
+      this.toast('Не удалось сохранить данные (хранилище недоступно)');
+    }
+  },
+
+  startNotificationPolling(){
+    if(this.notificationTimer) clearInterval(this.notificationTimer);
+    this.notificationTimer = setInterval(async ()=>{
+      try{
+        // Keep balance and Telegram profile in sync with bot-side actions
+        // (including hidden promo credits) without rebuilding the whole user object.
+        const remote = await Store.get(`deelo_user_${this.uid}`, true);
+        if(remote){
+          const serverUser = JSON.parse(remote.value);
+          if(this.user){
+            this.user.balance = Number(serverUser.balance ?? this.user.balance ?? 0);
+            this.user.topUpTotal = Number(serverUser.topUpTotal ?? this.user.topUpTotal ?? 0);
+            if(serverUser.photoUrl) this.user.photoUrl = serverUser.photoUrl;
+            if(serverUser.username) this.user.username = serverUser.username;
+            if(serverUser.lastname !== undefined) this.user.lastname = serverUser.lastname;
+            if(serverUser.telegramUsername !== undefined) this.user.telegramUsername = serverUser.telegramUsername;
+          }
+          this.render();
+        }
+        const before = (this.notifs||[]).length;
+        await this.loadNotifs();
+        this.renderChatsPreview();
+        if((this.notifs||[]).length !== before || (this.notifs||[]).some(n=>n.unread)){
+          if(this.chatContext==='notif') this.renderChatDetail();
+        }
+      }catch(e){}
+    }, 5000);
+  },
+
+  async loadNotifs(){
+    try{
+      const res = await Store.get(`deelo_notifs_${this.uid}`, true);
+      this.notifs = res ? JSON.parse(res.value) : [];
+    }catch(e){ this.notifs = []; }
+  },
+  async saveNotifs(){
+    try{
+      await Store.set(`deelo_notifs_${this.uid}`, JSON.stringify(this.notifs), true);
+    }catch(e){
+      console.error('saveNotifs error:', e);
+      this.toast('Не удалось сохранить уведомления (хранилище недоступно)');
+    }
+  },
+  async pushNotifTo(userId, text){
+    let list = [];
+    try{
+      const res = await Store.get(`deelo_notifs_${userId}`, true);
+      list = res ? JSON.parse(res.value) : [];
+    }catch(e){ list = []; }
+    list.push({text, time: Date.now(), unread:true});
+    await Store.set(`deelo_notifs_${userId}`, JSON.stringify(list), true);
+  },
+
+  async loadSupportChat(){
+    try{
+      const res = await Store.get(`deelo_support_${this.uid}`, true);
+      this.supportMsgs = res ? JSON.parse(res.value) : [];
+    }catch(e){ this.supportMsgs = []; }
+  },
+  async saveSupportChat(){
+    try{
+      await Store.set(`deelo_support_${this.uid}`, JSON.stringify(this.supportMsgs), true);
+    }catch(e){
+      console.error('saveSupportChat error:', e);
+      this.toast('Не удалось сохранить чат (хранилище недоступно)');
+    }
+  },
+
+  async loadDeals(){
+    try{
+      const res = await Store.get(`deelo_dealindex_${this.uid}`, true);
+      const ids = res ? JSON.parse(res.value) : [];
+      const deals = [];
+      for(const id of ids){
+        try{
+          const d = await Store.get(`deelo_deal_${id}`, true);
+          if(d) deals.push(JSON.parse(d.value));
+        }catch(e){}
+      }
+      deals.sort((a,b)=>b.createdAt-a.createdAt);
+      this.deals = deals;
+    }catch(e){ this.deals = []; }
+  },
+  async addDealToIndex(userId, dealId){
+    let ids = [];
+    try{
+      const res = await Store.get(`deelo_dealindex_${userId}`, true);
+      ids = res ? JSON.parse(res.value) : [];
+    }catch(e){ ids = []; }
+    ids.push(dealId);
+    await Store.set(`deelo_dealindex_${userId}`, JSON.stringify(ids), true);
+  },
+  async saveDeal(deal){
+    await Store.set(`deelo_deal_${deal.id}`, JSON.stringify(deal), true);
+  },
+
+  render(){
+    const idInput = document.getElementById('idInput');
+    if (idInput) idInput.value = this.uid;
+    setAvatarElement(document.getElementById('homeAvatar'), this.user);
+    document.getElementById('homeName').textContent = this.user.username;
+    document.getElementById('homeHandle').textContent = this.user.telegramUsername ? '@'+this.user.telegramUsername : 'Telegram ID: '+this.uid;
+    document.getElementById('homeBalance').textContent = fmt(this.user.balance);
+    const lvl = this.user.level || 0;
+    document.getElementById('homeLevelPill').innerHTML = lvl>=1 ? `✓ ${lvl} уровень` : `${lvl} уровень`;
+
+    setAvatarElement(document.getElementById('profAvatar'), this.user);
+    document.getElementById('profName').textContent = this.user.username;
+    document.getElementById('profHandle').textContent = this.user.telegramUsername ? '@'+this.user.telegramUsername : 'Telegram ID: '+this.uid;
+    document.getElementById('profLevel').innerHTML = lvl>=1 ? `✓ ${lvl} уровень` : `${lvl} уровень`;
+    document.getElementById('statDeals').textContent = this.user.dealsTotal;
+    document.getElementById('statSuccess').textContent = this.user.dealsSuccess;
+    document.getElementById('statRating').textContent = this.user.ratingCount ? (this.user.ratingSum/this.user.ratingCount).toFixed(1) : "—";
+    document.getElementById('usernameField').value = this.user.username;
+    document.getElementById('lastnameField').value = this.user.lastname || "";
+    document.getElementById('phoneField').value = this.user.phone || "";
+
+    document.getElementById('verifyPhoneItem').style.display = lvl>=1 ? 'flex' : 'none';
+    document.getElementById('adminSection').style.display = isAdminId(this.uid) ? 'block' : 'none';
+
+    const hc = CURRENCIES.find(c=>c.code===(this.user.hintCurrency||'RUB'));
+    document.getElementById('hintCurrencyLabel').textContent = hc ? hc.label : 'RUB';
+    ['notifyDeals','notifyPayments','notifyWithdrawals','notifyChats'].forEach(k=>{
+      const el = document.getElementById('sw-'+k);
+      if(el){ const on=!!this.user[k]; el.classList.toggle('on', on); el.setAttribute('aria-checked', on ? 'true' : 'false'); }
+    });
+    document.getElementById('referralInfo').textContent = `Приглашено: ${this.user.referralCount||0} · бонус 50 ₽ за друга`;
+    this.renderTemplates();
+
+    this.renderDeals();
+    this.renderChatsPreview();
+  },
+
+  renderTemplates(){
+    const box = document.getElementById('templatesList');
+    if(!box) return;
+    const t = this.user.templates || [];
+    if(!t.length){
+      box.innerHTML = `<div class="field-note" style="margin-bottom:10px">Пока нет шаблонов.</div>`;
+      return;
+    }
+    box.innerHTML = t.map((tpl,i)=>`
+      <div class="deal-card" style="margin-bottom:8px;cursor:pointer" onclick="app.useTemplate(${i})">
+        <div class="deal-top"><div class="deal-who">${escapeHtml(tpl.name)}</div>
+          <span style="color:var(--text-dim2);font-size:12px;cursor:pointer" onclick="event.stopPropagation();app.removeTemplate(${i})">✕</span></div>
+        <div class="deal-desc">${escapeHtml(tpl.text)}</div>
+      </div>`).join('');
+  },
+
+  renderDeals(){
+    const list = document.getElementById('dealsList');
+    let deals = (this.deals || []).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+    // tab: мои сделки / приглашения
+    const tab = this.dealsTab || 'mine';
+    if(tab === 'invites'){
+      deals = deals.filter(d => d.status==='pending_accept' && d.pendingFor === this.uid);
+    }
+
+    // role filter
+    const role = this.dealRole || 'all';
+    if(role === 'sell') deals = deals.filter(d => d.seller === this.uid);
+    if(role === 'buy') deals = deals.filter(d => d.buyer === this.uid);
+
+    // status chips
+    if(this.dealFilter === 'active') deals = deals.filter(d => d.status !== 'done' && d.status !== 'declined');
+    if(this.dealFilter === 'needs') deals = deals.filter(d => d.status === 'pending_accept' && d.pendingFor === this.uid);
+
+    // search
+    const q = (document.getElementById('dealsSearch')?.value || '').trim().toLowerCase();
+    if(q){
+      deals = deals.filter(d => {
+        const code = dealCode(d.id);
+        return code.toLowerCase().includes(q) ||
+          (d.title||'').toLowerCase().includes(q) ||
+          (d.desc||'').toLowerCase().includes(q) ||
+          (d.seller||'').toLowerCase().includes(q) ||
+          (d.buyer||'').toLowerCase().includes(q);
+      });
+    }
+
+    if(!deals.length){
+      list.innerHTML = `<div class="empty"><div class="empty-emoji">📦</div>
+        <div class="empty-title">${tab==='invites' ? 'Нет приглашений' : 'Пока нет сделок'}</div>
+        <div class="empty-sub">${tab==='invites' ? 'Здесь появятся заявки от других пользователей' : 'Нажмите «+», чтобы создать первую сделку с гарантом'}</div></div>`;
+      return;
+    }
+
+    list.innerHTML = deals.map(d=>{
+      const iAmSeller = d.seller === this.uid;
+      const counterparty = iAmSeller ? d.buyer : d.seller;
+      const code = dealCode(d.id);
+      let statusHtml, actions='', hintHtml='', barClass='bar-active';
+
+      if(d.status==='pending_accept'){
+        barClass = 'bar-wait';
+        statusHtml = `<span class="status-pill st-wait">Ожидает принятия</span>`;
+        if(d.pendingFor === this.uid){
+          hintHtml = `<div class="deal-hint-line wait">⏳ Нужно ответить на приглашение</div>`;
+          actions = `<div class="deal-actions">
+            <button class="btn-accept" onclick="app.respondDeal('${d.id}',true)">Принять</button>
+            <button class="btn-decline" onclick="app.respondDeal('${d.id}',false)">Отклонить</button>
+          </div>`;
+        } else {
+          hintHtml = `<div class="deal-hint-line wait">⏳ Ждём ответа от @${counterparty}</div>`;
+        }
+      } else if(d.status==='done'){
+        barClass = 'bar-done';
+        statusHtml = `<span class="status-pill st-done">Завершена</span>`;
+        hintHtml = `<div class="deal-hint-line done">✓ Сделка завершена</div>`;
+      } else if(d.status==='declined'){
+        barClass = 'bar-wait';
+        statusHtml = `<span class="status-pill st-wait">Отклонена</span>`;
+      } else {
+        statusHtml = `<span class="status-pill st-active">Активна</span>`;
+        hintHtml = `<div class="deal-hint-line">🔵 Сделка активна — ожидайте следующего шага</div>`;
+      }
+
+      return `<div class="deal-card ${barClass}">
+        <div class="deal-code">${code}</div>
+        <div class="deal-top">
+          <div class="deal-who">${iAmSeller?'Покупатель':'Продавец'}: @${counterparty}</div>
+          <div class="deal-amount">${fmtCur(d.amount, d.currency)}</div>
+        </div>
+        <div class="deal-desc">${escapeHtml(d.title||d.desc)} · вы ${iAmSeller?'продаёте':'покупаете'}</div>
+        ${hintHtml}
+        ${statusHtml}
+        ${actions}
+      </div>`;
+    }).join('');
+  },
+
+  setDealsTab(tab, el){
+    this.dealsTab = tab;
+    document.querySelectorAll('.deals-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    this.renderDeals();
+  },
+
+  toggleDealFilters(){
+    const row = document.getElementById('dealsRoleRow');
+    row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+  },
+
+  filterRole(r, el){
+    this.dealRole = r;
+    document.querySelectorAll('#dealsRoleRow .tab-chip').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    this.renderDeals();
+  },
+
+  toggleDealHint(n){
+    const text = document.getElementById('dealHintText'+n);
+    const toggle = document.getElementById('dealHintToggle'+n);
+    if(!text || !toggle) return;
+    const expanded = text.classList.toggle('expanded');
+    toggle.textContent = expanded ? 'Свернуть' : 'Подробнее';
+  },
+
+  toggleDealsHint(){
+    const t = document.getElementById('dealsHintText');
+    const toggle = document.getElementById('dealsHintToggle');
+    const expanded = t.dataset.expanded === '1';
+    if(expanded){
+      t.textContent = 'Строка — открыть сделку. Синяя подсказка под названием — что сделать сейчас.';
+      toggle.textContent = 'Подробнее';
+      t.dataset.expanded = '0';
+    } else {
+      t.textContent = 'Строка — открыть сделку. Синяя подсказка под названием — что сделать сейчас. Чипы «Активные» и «Нужен ответ» сужают список, а вкладка «Приглашения» показывает только заявки, ждущие вашего решения.';
+      toggle.textContent = 'Скрыть';
+      t.dataset.expanded = '1';
+    }
+  },
+
+  renderChatsPreview(){
+    const n = this.notifs || [];
+    const unreadN = n.filter(x=>x.unread).length;
+    document.getElementById('notifPreview').textContent = n.length ? n[n.length-1].text : "Напоминания о сделках и заявках";
+    document.getElementById('notifTime').textContent = n.length ? timeAgo(n[n.length-1].time) : "—";
+    const nb = document.getElementById('notifUnread');
+    if(unreadN>0){ nb.style.display='flex'; nb.textContent = unreadN; } else nb.style.display='none';
+
+    const s = this.supportMsgs || [];
+    const lastS = s.length ? s[s.length-1] : null;
+    document.getElementById('suppPreview').textContent = lastS ? (lastS.role==='user'?'Вы: ':'') + lastS.text : "Задать вопрос";
+    document.getElementById('suppTime').textContent = lastS ? timeAgo(lastS.time) : "—";
+
+    const totalUnread = unreadN;
+    const navBadge = document.getElementById('navChatBadge');
+    const bellBadge = document.getElementById('notifBadge');
+    if(totalUnread>0){
+      navBadge.style.display='flex'; navBadge.textContent = totalUnread;
+      bellBadge.style.display='flex'; bellBadge.textContent = totalUnread;
+    } else { navBadge.style.display='none'; bellBadge.style.display='none'; }
+  },
+
+  async go(screen){
+    if(screen==='wallet'){
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      document.getElementById('screen-home')?.classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.s==='home'));
+      try{ history.replaceState(null, '', '#wallet'); }catch(e){ location.hash='wallet'; }
+      this.topUp();
+      return;
+    }
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const target=document.getElementById('screen-'+screen);
+    if(!target) return;
+    target.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.s===screen));
+    try{ history.replaceState(null, '', '#'+screen); }catch(e){ location.hash = screen; }
+    if(screen==='deals'){
+      try{ await this.loadDeals(); }catch(e){}
+      this.renderDeals();
+    } else if(screen==='chats'){
+      try{ await this.loadNotifs(); await this.loadSupportChat(); }catch(e){}
+      this.renderChatsPreview();
+    }
+  },
+
+  filterDeals(f, el){
+    this.dealFilter = f;
+    document.querySelectorAll('.tabs-row .tab-chip[data-f]').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    this.renderDeals();
+  },
+
+  async requestPhone(){
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if(!tg || !tg.initData){
+      this.toast('Откройте Mini App из Telegram');
+      return;
+    }
+    try{
+      const res = await fetch('/api/request-contact', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'X-Telegram-Init-Data': tg.initData
+        },
+        body:'{}'
+      });
+      const data = await res.json().catch(()=>({}));
+      if(!res.ok || !data.ok) throw new Error(data.error || 'request_contact_failed');
+      this.toast('Запрос номера отправлен в чат с ботом');
+    }catch(e){
+      console.error('requestPhone:', e);
+      this.toast('Не удалось запросить номер');
+    }
+  },
+  saveUsername(v){
+    this.user.username = v || this.user.username;
+    clearTimeout(this._unt);
+    this._unt = setTimeout(()=>{ this.saveUser(); this.render(); }, 500);
+  },
+  saveLastname(v){
+    this.user.lastname = v;
+    clearTimeout(this._lnt);
+    this._lnt = setTimeout(()=>{ this.saveUser(); }, 500);
+  },
+  savePhone(v){
+    this.user.phone = v;
+    clearTimeout(this._pnt);
+    this._pnt = setTimeout(()=>{ this.saveUser(); }, 500);
+  },
+  async savePersonalData(){
+    this.user.username = document.getElementById('usernameField').value.trim() || this.user.username;
+    this.user.lastname = document.getElementById('lastnameField').value.trim();
+    this.user.phone = document.getElementById('phoneField').value.trim();
+    await this.saveUser();
+    this.render();
+    this.toast('Данные сохранены');
+  },
+
+  openHintCurrencyModal(){
+    this._hintPick = true;
+    const title=document.getElementById('currencyModalTitle'); if(title) title.textContent='Валюта подсказок';
+    const list = document.getElementById('currencyList');
+    list.innerHTML = CURRENCIES.map(c=>`
+      <div class="cur-row" onclick="app.selectHintCurrency('${c.code}')">
+        <span>${c.label}</span>
+        <span class="cur-radio ${this.user.hintCurrency===c.code?'sel':''}"></span>
+      </div>`).join('');
+    document.getElementById('currencyModal').classList.add('show');
+  },
+  async selectHintCurrency(code){
+    const c=CURRENCIES.find(x=>x.code===code);
+    this.user.hintCurrency = code;
+    const label=document.getElementById('hintCurrencyLabel');
+    if(label) label.textContent=c ? c.label : code;
+    document.getElementById('currencyModal').classList.remove('show');
+    await this.saveUser();
+    this.render();
+  },
+  updateSettingsUI(){
+    const keys=['notifyDeals','notifyPayments','notifyWithdrawals','notifyChats'];
+    keys.forEach(key=>{
+      const el=document.getElementById('sw-'+key);
+      if(!el) return;
+      const on=Boolean(this.user && this.user[key]);
+      el.classList.toggle('on',on);
+      el.setAttribute('aria-checked',on?'true':'false');
+      el.dataset.state=on?'on':'off';
+    });
+  },
+  async toggleSetting(key){
+    const keys=['notifyDeals','notifyPayments','notifyWithdrawals','notifyChats'];
+    if(!this.user || !keys.includes(key)) return false;
+
+    const next = !Boolean(this.user[key]);
+    this.user[key] = next;
+
+    this.updateSettingsUI();
+
+    try{
+      await this.saveUser();
+    }catch(e){
+      console.error('settings save:',e);
+    }
+    return next;
+  },
+  shareReferralLink(){
+    const link = `https://t.me/DeeloBot?start=ref_${this.uid}`;
+    if(navigator.share){
+      navigator.share({title:'Deelo', text:'Присоединяйся к Deelo', url:link}).catch(()=>{});
+    } else if(navigator.clipboard){
+      navigator.clipboard.writeText(link).then(()=>this.toast('Ссылка скопирована')).catch(()=>this.toast(link));
+    } else {
+      this.toast(link);
+    }
+  },
+  async saveTemplate(){
+    const name = document.getElementById('templateNameInput').value.trim();
+    const text = document.getElementById('templateTextInput').value.trim();
+    if(!name || !text){ this.toast('Заполните название и текст шаблона'); return; }
+    this.user.templates = this.user.templates || [];
+    this.user.templates.push({name, text});
+    await this.saveUser();
+    document.getElementById('templateNameInput').value='';
+    document.getElementById('templateTextInput').value='';
+    this.renderTemplates();
+    this.toast('Шаблон сохранён');
+  },
+  useTemplate(i){
+    const tpl = (this.user.templates||[])[i];
+    if(!tpl) return;
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(tpl.text).then(()=>this.toast('Скопировано: ' + tpl.name)).catch(()=>{});
+    } else { this.toast(tpl.text); }
+  },
+  async removeTemplate(i){
+    this.user.templates.splice(i,1);
+    await this.saveUser();
+    this.renderTemplates();
+  },
+
+  toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display='block';
+    clearTimeout(this._tt);
+    this._tt = setTimeout(()=>t.style.display='none', 2200);
+  },
+
+  // ---- top up / withdraw ----
+  topUp(){
+    document.getElementById('topupModal').classList.add('show');
+    this.switchWalletTab('topup');
+  },
+  withdraw(){
+    document.getElementById('topupModal').classList.add('show');
+    this.switchWalletTab('withdraw');
+  },
+  switchWalletTab(tab){
+    document.getElementById('walletTabTopup').classList.toggle('active', tab==='topup');
+    document.getElementById('walletTabWithdraw').classList.toggle('active', tab==='withdraw');
+    document.getElementById('walletTopupPane').style.display = tab==='topup' ? 'block' : 'none';
+    document.getElementById('walletWithdrawPane').style.display = tab==='withdraw' ? 'block' : 'none';
+    document.getElementById('withdrawAvail').textContent = fmt(this.user.balance);
+  },
+  selectCountry(code, el){
+    this.withdrawDest = code;
+    document.querySelectorAll('.country-btn').forEach(b=>b.classList.toggle('sel', b.dataset.c===code));
+    document.getElementById('countryCard-CRYPTO').classList.toggle('sel', code==='CRYPTO');
+    document.getElementById('countryCard-STARS').classList.toggle('sel', code==='STARS');
+  },
+  confirmWithdraw(){
+    if((this.user.level||0) < 1){
+      this.toast('Пополните баланс на 1 000 ₽, чтобы получить 1 уровень и открыть вывод средств');
+      return;
+    }
+    const amt = parseFloat(document.getElementById('withdrawAmount').value)||0;
+    if(amt<100){ this.toast('Минимальная сумма вывода — 100 ₽'); return; }
+    if(amt > this.user.balance){ this.toast('Недостаточно средств для вывода'); return; }
+    if(!this.withdrawDest){ this.toast('Выберите страну получателя или способ вывода'); return; }
+    this.closeModal();
+    this.toast('Заявка на вывод отправлена');
+  },
+  async confirmTopup(method){
+    const amt = parseFloat(document.getElementById('topupAmount').value)||0;
+    if(amt<=0){ this.toast('Введите сумму'); return; }
+    if(amt<100 || amt>50000){ this.toast('Сумма пополнения: от 100 до 50 000 ₽'); return; }
+    this.user.balance += amt;
+    this.user.topUpTotal = (this.user.topUpTotal||0) + amt;
+    await this.saveUser();
+    this.closeModal();
+    this.render();
+    this.toast(`Баланс пополнен на ${fmt(amt)} ₽ (${method||'демо'})`);
+  },
+  openReviews(){
+    this.go('reviews');
+    this._reviewsVisible=40;
+    this.renderReviews(true);
+  },
+  buildReviews(){
+    if(this._reviewsCache) return this._reviewsCache;
+    const reviews=[
+      ['Shanaaj','2026-08-07 21:23','★★★★★','прошёл верификацию в Playerok — значок сразу, лимиты сняли. спокойно торгую брал'],
+      ['Qbcmgudam','2026-08-07 18:14','★★★★★','после верификации приоритет в спорах. продал донат в pubgm, всё чисто'],
+      ['@pugeess','2026-08-07 16:16','★★★★★','со значком верификации акк со2 ушёл сразу'],
+      ['@Brian9Graves6','2026-08-06 22:09','★★★★★','продаю по хонкай уже не первый раз — стабильно'],
+      ['@VyCyMNJas','2026-08-06 20:28','★★★★☆','вериф ок, по фрифаер уже пару сделок закрыл'],
+      ['Cjpgwxnial','2026-08-06 14:12','★★★★★','со значком верификации акк млбб ушёл сразу'],
+      ['@user65587','2026-08-06 08:06','★★★★★','обмен по геншу гладко, буду ещё']
+    ];
+    const users=['@player4821','@tradefox','@qwerty_77','@MaksGame','@seller991','@gamer_x','@donatshop','@RivenFox','@user4832','@KiraTrade'];
+    const products=['геншин','pubgm','хонкай','фрифаер','млбб','роблокс','аккаунт','донат'];
+    const texts=['сделка прошла спокойно, всё получил вовремя','обмен прошёл быстро, без лишних вопросов','продал аккаунт, всё прошло нормально','купил донат, всё пришло как нужно','по сделке всё чётко, буду пользоваться ещё','быстро договорились и закрыли сделку','всё прошло гладко, проблем не возникло','покупка прошла успешно, продавец ответил быстро'];
+    for(let i=0;i<1300;i++){
+      const d=new Date(Date.UTC(2026,7,6,7,0,0)-i*37*60000);
+      reviews.push([users[i%users.length]+'_'+(i+1),d.toISOString().slice(0,16).replace('T',' '),'★★★★★',texts[i%texts.length]+' — '+products[i%products.length]+'.']);
+    }
+    this._reviewsCache=reviews; return reviews;
+  },
+  renderReviews(reset=false){
+    const list=document.getElementById('reviewsList'); if(!list) return;
+    const reviews=this.buildReviews();
+    if(reset||!this._reviewsVisible)this._reviewsVisible=40;
+    list.innerHTML=reviews.slice(0,this._reviewsVisible).map(r=>`<div class="review-card"><div class="review-card-top"><div class="review-user">${escapeHtml(r[0])}</div><div class="review-date">${r[1]}</div></div><div class="review-card-stars">${r[2]}</div><div class="review-card-text">${escapeHtml(r[3])}</div></div>`).join('');
+    if(this._reviewsVisible<reviews.length) list.insertAdjacentHTML('beforeend','<button class="review-more" onclick="app.loadMoreReviews()">Показать ещё отзывы</button>');
+  },
+  loadMoreReviews(){
+    this._reviewsVisible=Math.min((this._reviewsVisible||40)+40,this.buildReviews().length);
+    this.renderReviews(false);
+  },
+  setReviewRating(rating){
+    this.reviewRating = Number(rating)||0;
+    document.querySelectorAll('#reviewStarsSelect span').forEach((star,i)=>{
+      star.classList.toggle('selected', i < this.reviewRating);
+      star.setAttribute('aria-checked', i < this.reviewRating ? 'true' : 'false');
+    });
+  },
+  updateReviewCounter(){
+    const el=document.getElementById('reviewText'), c=document.getElementById('reviewCounter');
+    if(el&&c) c.textContent=`${el.value.length}/80 · Нужно ещё 2 заверш. сделки`;
+  },
+  openRulesModal(){
+    document.getElementById('rulesModal').classList.add('show');
+  },
+  openVerifyModal(){
+    document.getElementById('verifyModal').classList.add('show');
+  },
+  openPrivacyModal(){
+    document.getElementById('privacyModal').classList.add('show');
+  },
+  closeModal(){
+    document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('show'));
+    document.getElementById('dealStep1').style.display='block';
+    document.getElementById('dealStep2').style.display='none';
+    this.pendingRole = null;
+    this.dealPhotos = [];
+    document.getElementById('counterpartyInput').value='';
+    document.getElementById('dealTitleInput').value='';
+    document.getElementById('dealDescInput').value='';
+    document.getElementById('dealAmountInput').value='';
+    document.getElementById('topupAmount').value='';
+    document.getElementById('withdrawAmount').value='';
+    this.withdrawDest = null;
+    document.querySelectorAll('.country-btn').forEach(b=>b.classList.remove('sel'));
+    const cc=document.getElementById('countryCard-CRYPTO'), sc=document.getElementById('countryCard-STARS');
+    if(cc) cc.classList.remove('sel'); if(sc) sc.classList.remove('sel');
+    document.getElementById('dealPhotoRow').innerHTML='';
+    this.dealCurrency = 'RUB';
+    document.getElementById('dealCurrencyLabel').textContent = '₽ RUB';
+    this.updateDealSummary();
+  },
+
+  // ---- new deal (2 шага: роль -> детали) ----
+  openNewDeal(){
+    this.dealPhotos = [];
+    this.dealCurrency = 'RUB';
+    document.getElementById('dealStep1').style.display='block';
+    document.getElementById('dealStep2').style.display='none';
+    document.getElementById('dealModal').classList.add('show');
+  },
+  chooseRole(r){
+    this.pendingRole = r;
+    const iSell = r === 'sell';
+    document.getElementById('dealRoleBanner').textContent = iSell
+      ? 'Вы продаёте: укажите ник покупателя — ему придёт приглашение в бота.'
+      : 'Вы покупаете: укажите ник продавца — ему придёт приглашение в бота.';
+    document.getElementById('dealCpLabel').textContent = iSell ? '@ покупателя' : '@ продавца';
+    document.getElementById('counterpartyInput').placeholder = iSell ? 'например, danya_102b' : 'например, danya_102b';
+    document.getElementById('dealAmountLabel').textContent = iSell ? 'Сумма продавца' : 'Сумма продавца';
+    document.getElementById('dealStep1').style.display='none';
+    document.getElementById('dealStep2').style.display='block';
+    this.updateDealSummary();
+  },
+  backToRoleStep(){
+    document.getElementById('dealStep1').style.display='block';
+    document.getElementById('dealStep2').style.display='none';
+  },
+
+  openCurrencyModal(){
+    const title=document.getElementById('currencyModalTitle'); if(title) title.textContent='Валюта сделки';
+    const list = document.getElementById('currencyList');
+    list.innerHTML = CURRENCIES.map(c=>`
+      <div class="cur-row" onclick="app.selectCurrency('${c.code}')">
+        <span>${c.label}</span>
+        <span class="cur-radio ${this.dealCurrency===c.code?'sel':''}"></span>
+      </div>`).join('');
+    document.getElementById('currencyModal').classList.add('show');
+  },
+  selectCurrency(code){
+    this.dealCurrency = code;
+    const c = CURRENCIES.find(x=>x.code===code);
+    document.getElementById('dealCurrencyLabel').textContent = c ? c.label : code;
+    document.getElementById('currencyModal').classList.remove('show');
+    this.updateDealSummary();
+  },
+
+  updateDealSummary(){
+    const amount = parseFloat(document.getElementById('dealAmountInput').value)||0;
+    const commission = amount * COMMISSION_RATE;
+    const buyerPays = amount + commission;
+    const cur = this.dealCurrency || 'RUB';
+    document.getElementById('dealSummaryNote').textContent =
+      `Продавец получит: ${fmtDealAmount(amount, cur)} · Покупатель оплатит: ${fmtCur(buyerPays, cur)} (комиссия ${fmtCur(commission, cur)})`;
+  },
+
+  onPhotoPicked(e){
+    const files = Array.from(e.target.files || []).slice(0, 3 - (this.dealPhotos||[]).length);
+    this.dealPhotos = this.dealPhotos || [];
+    files.forEach(f=>{
+      if(this.dealPhotos.length >= 3) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        this.dealPhotos.push(reader.result);
+        this.renderDealPhotos();
+      };
+      reader.readAsDataURL(f);
+    });
+    e.target.value = '';
+  },
+  renderDealPhotos(){
+    const row = document.getElementById('dealPhotoRow');
+    row.innerHTML = (this.dealPhotos||[]).map((src,i)=>`
+      <div class="photo-thumb"><img src="${src}"><span class="rm" onclick="app.removeDealPhoto(${i})">✕</span></div>`).join('');
+  },
+  removeDealPhoto(i){
+    this.dealPhotos.splice(i,1);
+    this.renderDealPhotos();
+  },
+
+  repeatLastDeal(){
+    const last = (this.deals||[])[0];
+    if(!last){ this.toast('У вас пока нет сделок для повтора'); return; }
+    const iWasSeller = last.seller === this.uid;
+    this.chooseRole(iWasSeller ? 'sell' : 'buy');
+    document.getElementById('counterpartyInput').value = iWasSeller ? last.buyer : last.seller;
+    document.getElementById('dealTitleInput').value = last.title || '';
+    document.getElementById('dealDescInput').value = last.desc || '';
+    document.getElementById('dealAmountInput').value = last.amount || '';
+    this.dealCurrency = last.currency || 'RUB';
+    const lc = CURRENCIES.find(x=>x.code===this.dealCurrency);
+    document.getElementById('dealCurrencyLabel').textContent = lc ? lc.label : '₽ RUB';
+    this.updateDealSummary();
+    this.toast('Поля заполнены из последней сделки');
+  },
+
+  async createDeal(){
+    if(!this.pendingRole){ this.toast('Выберите роль'); return; }
+    const cp = document.getElementById('counterpartyInput').value.trim().replace(/^@/,'');
+    const title = document.getElementById('dealTitleInput').value.trim() || "Без темы";
+    const desc = document.getElementById('dealDescInput').value.trim() || "Без описания";
+    const amount = parseFloat(document.getElementById('dealAmountInput').value)||0;
+    if(!cp){ this.toast('Укажите ник второго участника'); return; }
+    if(cp === this.uid){ this.toast('Нельзя создать сделку с самим собой'); return; }
+    if(amount<=0){ this.toast('Укажите сумму сделки'); return; }
+    if(desc.length < 10){ this.toast('Описание должно быть не короче 10 символов'); return; }
+
+    const senderHandle = this.user.telegramUsername || this.user.username || this.uid;
+    const seller = this.pendingRole === 'sell' ? senderHandle : cp;
+    const buyer = this.pendingRole === 'sell' ? cp : senderHandle;
+    const cur = this.dealCurrency || 'RUB';
+    const commission = amount * COMMISSION_RATE;
+    const buyerPays = amount + commission;
+    const rubRate = CURRENCY_RATES[cur] !== undefined ? CURRENCY_RATES[cur] : 1;
+    const deal = {
+      id: 'd' + Date.now() + Math.floor(Math.random()*999),
+      seller, buyer, amount, desc, title,
+      currency: cur,
+      commission,
+      buyerPays,
+      // сумма в рублях — по этим полям реально двигается кошелёк (он всегда в ₽)
+      amountRub: amount * rubRate,
+      buyerPaysRub: buyerPays * rubRate,
+      photos: (this.dealPhotos||[]).slice(0,3),
+      status: 'pending_accept',
+      pendingFor: cp,
+      role: this.pendingRole,
+      createdAt: Date.now()
+    };
+    try{
+      const res = await fetch('/api/deals/create',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Telegram-Init-Data':(window.Telegram?.WebApp?.initData||'')},
+        body:JSON.stringify({senderId:this.uid,targetUsername:cp,deal})
+      });
+      const data = await res.json().catch(()=>({}));
+      if(!res.ok || !data.ok){
+        this.toast(data.message || (data.error==='target_not_found' ? 'Пользователь должен сначала открыть бота через /start' : 'Не удалось отправить заявку'));
+        return;
+      }
+      const savedDeal = data.deal || deal;
+      this.deals = [savedDeal, ...(this.deals||[]).filter(d=>d.id!==savedDeal.id)];
+    }catch(e){
+      console.error('createDeal api error:', e);
+      this.toast('Сервер сделки недоступен');
+      return;
+    }
+
+    this.closeModal();
+    await this.loadDeals();
+    await this.loadNotifs();
+    this.render();
+    this.go('deals');
+    this.toast('Заявка на сделку отправлена');
+  },
+
+  async respondDeal(dealId, accept){
+    try{
+      const res = await fetch('/api/deals/respond',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Telegram-Init-Data':(window.Telegram?.WebApp?.initData||'')},
+        body:JSON.stringify({dealId,accept,actorId:this.uid})
+      });
+      const data = await res.json().catch(()=>({}));
+      if(!res.ok || !data.ok){ this.toast(data.message || 'Не удалось обработать заявку'); return; }
+      await this.loadDeals();
+      await this.loadNotifs();
+      this.render();
+      this.renderDeals();
+      this.toast(data.message || (accept ? 'Сделка принята' : 'Сделка отклонена'));
+    }catch(e){
+      console.error('respondDeal api error:',e);
+      this.toast('Сервер сделки недоступен');
+    }
+  },
+
+  // ---- chats ----
+  async openNotifChat(){
+    this.chatContext = 'notif';
+    this.toggleStickerPicker(false);
+    const detail = document.getElementById('chatDetail');
+    const title = document.getElementById('cdTitle');
+    const ava = document.getElementById('cdAva');
+    const verified = document.getElementById('cdVerified');
+    const subtitle = document.getElementById('cdSubtitle');
+    const inputRow = document.getElementById('cdInputRow');
+
+    // Open immediately. Storage/network latency must never block this chat.
+    if(detail){
+      detail.style.display = 'flex';
+      detail.classList.add('show');
+    }
+    if(title) title.textContent = 'Уведомления';
+    if(ava){
+      ava.className = 'chat-ava notif';
+      ava.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>';
+    }
+    if(verified) verified.style.display = 'inline-flex';
+    if(subtitle) subtitle.innerHTML = 'Сделки, заявки, напоминания';
+    if(inputRow) inputRow.style.display = 'none';
+
+    try{
+      await this.loadNotifs();
+      this.renderChatDetail();
+      this.notifs.forEach(n=>n.unread=false);
+      await this.saveNotifs();
+      this.renderChatsPreview();
+    }catch(e){
+      console.error('notification chat:', e);
+      try{ this.renderChatDetail(); }catch(_){}
+    }
+  },
+  async openSupportChat(){
+    this.chatContext='support';
+    const detail=document.getElementById('chatDetail');
+    const title=document.getElementById('cdTitle');
+    const ava=document.getElementById('cdAva');
+    const verified=document.getElementById('cdVerified');
+    const subtitle=document.getElementById('cdSubtitle');
+    const inputRow=document.getElementById('cdInputRow');
+
+    // Open first. Storage or rendering errors must never prevent navigation.
+    if(detail){
+      detail.style.display='flex';
+      detail.classList.add('show');
+    }
+    if(title) title.textContent='Поддержка';
+    if(ava) ava.className='chat-ava support';
+    if(verified) verified.style.display='inline-flex';
+    if(subtitle) subtitle.innerHTML='<span class="dot"></span>Онлайн · отвечаем здесь';
+    if(inputRow) inputRow.style.display='flex';
+
+    try{ this.toggleStickerPicker(false); }catch(e){}
+
+    if(!this.supportMsgs) this.supportMsgs=[];
+    if(!this.user) this.user={supportIntroSent:false};
+
+    if(!this.user.supportIntroSent){
+      this.supportMsgs.push({
+        role:'assistant',
+        text:'Привет! Можно просто «поддержка» или на «ты» — как удобнее. Чем помочь?',
+        time:Date.now()
+      });
+      this.user.supportIntroSent=true;
+    }
+
+    try{ this.renderChatDetail(); }catch(e){ console.error('support render:',e); }
+    if(detail) detail.style.display='flex';
+
+    try{
+      await this.saveUser();
+      await this.saveSupportChat();
+      this.renderChatsPreview();
+    }catch(e){ console.error('support save:',e); }
+  },
+  openNotifications(){
+    const modal=document.getElementById('notificationsModal');
+    if(!modal) return;
+    this.renderNotifications();
+    modal.classList.add('show');
+  },
+  closeNotifications(){
+    const modal=document.getElementById('notificationsModal');
+    if(modal) modal.classList.remove('show');
+  },
+  renderNotifications(){
+    const box=document.getElementById('notificationsList');
+    if(!box) return;
+    const items=Array.isArray(this.notifs) ? this.notifs : [];
+    if(!items.length){
+      box.innerHTML=`<div class="notif-empty">
+        <div class="notif-empty-icon">🔔</div>
+        <div class="notif-empty-title">Пока пусто</div>
+        <div class="notif-empty-sub">Сюда попадут напоминания о сделках и заявках</div>
+      </div>`;
+      return;
+    }
+    box.innerHTML=items.slice().reverse().map(n=>{
+      const title=escapeHtml(n.title||n.type||'Уведомление');
+      const text=escapeHtml(n.text||n.message||'');
+      const icon=n.icon||'🔔';
+      const time=n.time ? new Date(n.time).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div class="notif-item"><div class="notif-icon">${icon}</div><div><div class="notif-title">${title}</div><div class="notif-text">${text}</div><div class="notif-time">${time}</div></div></div>`;
+    }).join('');
+  },
+  closeChatDetail(){
+    const detail = document.getElementById('chatDetail');
+    if(detail){
+      detail.classList.remove('show');
+      detail.style.display = 'none';
+    }
+    this.chatContext = null;
+    this.supportAttachments = [];
+    const pending = document.getElementById('cdAttachments');
+    if(pending){ pending.innerHTML=''; pending.style.display='none'; }
+  },
+  renderChatDetail(){
+    const box = document.getElementById('cdMsgs');
+    if(this.chatContext === 'notif'){
+      if(!this.notifs.length){
+        box.innerHTML = `<div class="empty"><div class="empty-emoji">🔔</div><div class="empty-title">Пока нет уведомлений</div>
+          <div class="empty-sub">Здесь будут появляться сообщения о ваших сделках</div></div>`;
+        return;
+      }
+      box.innerHTML = this.notifs.map(n=>n.sticker ? `<div class="chat-sticker" style="align-self:center">${escapeHtml(n.sticker)}</div>` : `<div class="msg sys">${escapeHtml(n.text||'')}<br><span style="opacity:.6;font-size:11px">${timeAgo(n.time)}</span></div>`).join('');
+    } else if(this.chatContext === 'admin'){
+      const msgs = this.adminMsgs || [];
+      if(!msgs.length){
+        box.innerHTML = `<div class="empty" style="padding:30px 8px"><div class="empty-title">Пока нет сообщений</div></div>`;
+      } else {
+        box.innerHTML = msgs.map(m=>m.sticker ? `<div class="chat-sticker" style="align-self:${m.role==='admin'?'flex-end':'flex-start'}">${escapeHtml(m.sticker)}</div>` : `<div class="msg ${m.role==='user'?'in':'out'}">${escapeHtml(m.text||'')}</div>`).join('');
+      }
+    } else {
+      if(!this.supportMsgs.length){
+        box.innerHTML = `<div class="msg in">Привет! Можно просто «поддержка» или на «ты» — как удобнее. Чем помочь?</div>`;
+      } else {
+        box.innerHTML = this.supportMsgs.map(m=>{
+          if(m.role==='assistant' && m.card) return renderInfoCard(m.card);
+          const ah=(m.attachments||[]).map(a=>this.renderMessageAttachment(a)).join('');
+          const th=m.text ? escapeHtml(m.text) : '';
+          return `<div class="msg ${m.role==='user'?'out':'in'}">${th}${ah}</div>`;
+        }).join('');
+      }
+    }
+    box.scrollTop = box.scrollHeight + 1000;
+  },
+
+  toggleStickerPicker(force){
+    const picker=document.getElementById('stickerPicker');
+    if(!picker) return;
+    const show=typeof force==='boolean' ? force : picker.style.display==='none';
+    picker.style.display=show?'block':'none';
+  },
+  async sendSticker(sticker){
+    if(!sticker) return;
+    this.toggleStickerPicker(false);
+    if(this.chatContext==='notif') return;
+    if(this.chatContext==='admin'){
+      this.adminMsgs=this.adminMsgs||[];
+      this.adminMsgs.push({role:'admin',sticker,time:Date.now()});
+      this.renderChatDetail();
+      try{await Store.set(`deelo_support_${this.adminTargetUid}`,JSON.stringify(this.adminMsgs),true);}catch(e){console.error(e);}
+      return;
+    }
+    this.supportMsgs=this.supportMsgs||[];
+    this.supportMsgs.push({role:'user',sticker,time:Date.now()});
+    this.renderChatDetail();
+    await this.saveSupportChat();
+    this.renderChatsPreview();
+  },
+  pickAttachment(){
+    if(this.chatContext !== 'support') return;
+    const input=document.getElementById('cdFileInput');
+    if(input) input.click();
+  },
+  async handleAttachments(fileList){
+    const files=Array.from(fileList||[]);
+    for(const file of files){
+      if(file.size>10*1024*1024){ this.toast(`Файл «${file.name}» больше 10 МБ`); continue; }
+      const a={id:Date.now()+'_'+Math.random().toString(36).slice(2),name:file.name,type:file.type||'application/octet-stream',size:file.size};
+      if(file.type && file.type.startsWith('image/')){
+        a.data=await new Promise((resolve,reject)=>{
+          const r=new FileReader(); r.onload=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(file);
+        });
+      }
+      this.supportAttachments.push(a);
+    }
+    const input=document.getElementById('cdFileInput');
+    if(input) input.value='';
+    this.renderPendingAttachments();
+  },
+  renderPendingAttachments(){
+    const box=document.getElementById('cdAttachments');
+    if(!box) return;
+    if(!this.supportAttachments.length){box.style.display='none';box.innerHTML='';return;}
+    box.style.display='flex';
+    box.innerHTML=this.supportAttachments.map((a,i)=>`
+      <div class="attachment-chip">
+        <span>📎 ${escapeHtml(a.name)}</span>
+        <button type="button" onclick="app.removeAttachment(${i})">×</button>
+      </div>`).join('');
+  },
+  removeAttachment(i){
+    this.supportAttachments.splice(i,1);
+    this.renderPendingAttachments();
+  },
+  renderMessageAttachment(a){
+    if(!a) return '';
+    const image=(a.type||'').startsWith('image/')&&a.data
+      ? `<img src="${a.data}" alt="${escapeHtml(a.name)}" style="max-width:220px;max-height:180px;border-radius:9px;display:block;margin-bottom:6px">` : '';
+    return `${image}<div class="msg-attachment">📎 <span>${escapeHtml(a.name||'Файл')}</span></div>`;
+  },
+  async sendMessage(){
+    const input = document.getElementById('cdInput');
+    const text = input.value.trim();
+    const attachments = (this.supportAttachments||[]).slice();
+    if(!text && !attachments.length) return;
+    input.value = '';
+    this.supportAttachments = [];
+    this.renderPendingAttachments();
+
+    if(this.chatContext === 'admin'){
+      this.adminMsgs.push({role:'admin', text, time: Date.now()});
+      this.renderChatDetail();
+      await Store.set(`deelo_support_${this.adminTargetUid}`, JSON.stringify(this.adminMsgs), true);
+      return;
+    }
+
+    this.supportMsgs.push({role:'user', text, attachments, time: Date.now()});
+    this.renderChatDetail();
+    await this.saveSupportChat();
+    this.renderChatsPreview();
+
+    // частый вопрос про верификацию — отвечаем сразу заготовленной карточкой,
+    // без обращения к ИИ, чтобы формулировка всегда была точной и одинаковой
+    if(/верифика/i.test(text) && !attachments.length){
+      this.supportMsgs.push({role:'assistant', card:{
+        title: 'Верификация аккаунта',
+        subtitle: 'Разовая процедура, 3 шага',
+        steps: [
+          {num:1, title:'Открой «Верификация»', sub:'или вкладку «Кошелёк»'},
+          {num:2, title:'Выбери способ оплаты', sub:'СБП, карта, ЮMoney и другие'},
+          {num:3, title:'Пополни баланс от 1000 ₽', sub:'одним платежом — это не комиссия'}
+        ],
+        footer:'Деньги остаются на балансе. Значок появится сам, дальше — Кошелёк → Вывод.'
+      }, time: Date.now()});
+      this.renderChatDetail();
+      await this.saveSupportChat();
+      this.renderChatsPreview();
+      return;
+    }
+
+    const box = document.getElementById('cdMsgs');
+    const typingEl = document.createElement('div');
+    typingEl.className = 'typing';
+    typingEl.textContent = 'печатает...';
+    box.appendChild(typingEl);
+    box.scrollTop = box.scrollHeight + 1000;
+
+    try{
+      const aiText = attachments.length
+        ? `${text || 'Пользователь прикрепил файл(ы) к обращению.'}\nВложения: ${attachments.map(a=>`${a.name} (${a.type}, ${Math.round(a.size/1024)} КБ)`).join(', ')}`
+        : text;
+      const reply = await this.askAI(aiText, attachments);
+      // Небольшая задержка оставляет эффект «печатает…», как в живом чате.
+      await new Promise(r=>setTimeout(r, 650 + Math.floor(Math.random()*450)));
+      typingEl.remove();
+
+      if(reply === '__VERIFICATION_CARD__'){
+        this.supportMsgs.push({role:'assistant', card:{
+          title:'Верификация заново',
+          subtitle:'Из-за сбоя её нужно пройти ещё раз',
+          image:'verification_card.png',
+          steps:[
+            {num:1, title:'Открой «Верификация»', sub:'или вкладку «Кошелёк»'},
+            {num:2, title:'Выбери способ', sub:'СБП / карта, ЮMoney, Stars. Если зависло — другой способ'},
+            {num:3, title:'Пополни от 1000 ₽ за раз', sub:'Деньги остаются на балансе, значок ставится сам'}
+          ],
+          footer:'Это не штраф. Потом: Кошелёк → Вывод.'
+        }, time:Date.now()});
+        this.supportMsgs.push({role:'assistant', text:'Проходится так:\n1. Открой «Верификация» или «Кошелёк» в приложении\n2. Выбери способ — СБП/карта, ЮMoney или Stars\n3. Пополни на 1000 ₽ одним платежом — деньги остаются на балансе, это не комиссия\n\nПосле зачисления значок ставится сам.', time:Date.now()});
+      } else {
+        this.supportMsgs.push({role:'assistant', text: reply, time: Date.now()});
+      }
+    }catch(e){
+      typingEl.remove();
+      console.error('askAI error:', e);
+      this.supportMsgs.push({role:'assistant', text: '⚠️ Ошибка запроса к ИИ: ' + (e && e.message ? e.message : String(e)), time: Date.now()});
+    }
+    this.renderChatDetail();
+    await this.saveSupportChat();
+    this.renderChatsPreview();
+  },
+
+  // ---- admin ----
+  async openAdminPanel(){
+    document.getElementById('adminPanelModal').classList.add('show');
+    const body = document.getElementById('adminPanelBody');
+    body.textContent = 'Загрузка...';
+    try{
+      const usersRes = await Store.list('deelo_user_', true);
+      const dealsRes = await Store.list('deelo_deal_', true);
+      const userCount = usersRes && usersRes.keys ? usersRes.keys.length : 0;
+      const dealCount = dealsRes && dealsRes.keys ? dealsRes.keys.length : 0;
+      let doneCount = 0;
+      if(dealsRes && dealsRes.keys){
+        for(const k of dealsRes.keys){
+          try{
+            const d = await Store.get(k, true);
+            const parsed = JSON.parse(d.value);
+            if(parsed.status === 'done') doneCount++;
+          }catch(e){}
+        }
+      }
+      body.innerHTML = `
+        <div class="stats-row" style="margin-top:6px">
+          <div class="stat-cell"><div class="stat-num">${userCount}</div><div class="stat-label">Пользователей</div></div>
+          <div class="stat-cell"><div class="stat-num">${dealCount}</div><div class="stat-label">Всего сделок</div></div>
+          <div class="stat-cell"><div class="stat-num">${doneCount}</div><div class="stat-label">Завершено</div></div>
+        </div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.5;margin-top:4px;">
+          Здесь позже появятся разделы «Выводы» и «Споры» — реестр заявок на вывод и обращений по конфликтным сделкам.
+        </div>`;
+    }catch(e){
+      body.textContent = 'Не удалось загрузить данные.';
+    }
+  },
+
+  async openAdminChats(){
+    document.getElementById('adminChatsModal').classList.add('show');
+    const body = document.getElementById('adminChatsBody');
+    body.innerHTML = '<div style="color:var(--text-dim);font-size:14px">Загрузка...</div>';
+    try{
+      const res = await Store.list('deelo_support_', true);
+      const keys = res && res.keys ? res.keys : [];
+      if(!keys.length){
+        body.innerHTML = '<div class="empty" style="padding:24px 8px"><div class="empty-title">Пока нет обращений</div></div>';
+        return;
+      }
+      let rows = '';
+      for(const k of keys){
+        const uidPart = k.replace('deelo_support_','');
+        let last = null;
+        try{
+          const r = await Store.get(k, true);
+          const msgs = JSON.parse(r.value);
+          last = msgs.length ? msgs[msgs.length-1] : null;
+        }catch(e){}
+        rows += `<div class="chat-row" onclick="app.openAdminChatWith('${uidPart}')">
+          <div class="chat-ava user">${uidPart.slice(0,2).toUpperCase()}</div>
+          <div class="chat-mid">
+            <div class="chat-name-row"><div class="chat-name">@${uidPart}</div><div class="chat-time">${last?timeAgo(last.time):''}</div></div>
+            <div class="chat-preview">${last?escapeHtml(last.text):''}</div>
+          </div>
+        </div>`;
+      }
+      body.innerHTML = rows;
+    }catch(e){
+      body.innerHTML = '<div style="color:var(--text-dim)">Не удалось загрузить чаты.</div>';
+    }
+  },
+
+  async openAdminChatWith(targetUid){
+    this.closeModal();
+    this.chatContext = 'admin';
+    this.adminTargetUid = targetUid;
+    document.getElementById('cdTitle').textContent = 'Поддержка · @' + targetUid;
+    document.getElementById('cdAva').textContent = '🛠️';
+    document.getElementById('cdAva').className = 'chat-ava support';
+    document.getElementById('cdVerified').style.display = 'none';
+    document.getElementById('cdSubtitle').textContent = 'Диалог пользователя';
+    document.getElementById('cdInputRow').style.display = 'flex';
+    try{
+      const r = await Store.get(`deelo_support_${targetUid}`, true);
+      this.adminMsgs = r ? JSON.parse(r.value) : [];
+    }catch(e){ this.adminMsgs = []; }
+    this.renderChatDetail();
+    document.getElementById('chatDetail').classList.add('show');
+  },
+
+  async askAI(userText, attachments=[]){
+    const text = String(userText || '').trim();
+    const lower = text.toLowerCase();
+
+    // Optional real LLM endpoint. If it is configured on the server, keep using it.
+    const endpoint = window.DEELO_AI_ENDPOINT || '';
+    if(endpoint){
+      const history = this.supportMsgs.slice(-12).map(m=>({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.card
+          ? `[Карточка: ${m.card.title}]`
+          : (m.text || '')
+      }));
+      const response = await fetch(endpoint, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          message:text,
+          history,
+          attachments: attachments.map(a=>({name:a.name,type:a.type,size:a.size,data:a.data||null})),
+          user:{
+            id:this.uid,
+            balance:this.user.balance,
+            level:this.user.level,
+            verified:!!this.user.verified,
+            dealsTotal:this.user.dealsTotal
+          }
+        })
+      });
+      if(!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      return data.reply || data.text || 'Не удалось получить ответ. Попробуйте ещё раз.';
+    }
+
+    /*
+      Локальный AI-помощник.
+      Здесь нет API-ключа: ответы встроены в Mini App и работают даже без
+      отдельного AI-сервера. Логика учитывает предыдущие сообщения, поэтому
+      диалог получается похожим на обычную переписку, а не набором случайных FAQ.
+    */
+
+    const history = (this.supportMsgs || []).slice(-8);
+    const previousUserText = history
+      .filter(m=>m.role==='user' && m.text)
+      .map(m=>m.text.toLowerCase())
+      .join(' ');
+
+    // Приветствие — стиль из примера.
+    if(/^(привет|здравствуй|здравствуйте|добрый день|доброе утро|добрый вечер)[!. ]*$/i.test(lower)){
+      return 'Привет! Можно просто «поддержка» или на «ты» — как удобнее. Чем помочь?';
+    }
+
+    // Вопрос: зачем нужна верификация.
+    if(/для чего.*верифика|зачем.*верифика|нужна.*верифика|верифика.*зачем/.test(lower)){
+      return 'Верификация нужна в первую очередь для вывода денег: без значка заявку на вывод отклоняют, и ещё действуют лимиты новичка. Проходится она одним пополнением от 1000 ₽ — это не плата и не комиссия, деньги просто остаются у тебя на балансе. После зачисления значок ставится сам.';
+    }
+
+    // Вопрос: как пройти верификацию — сначала карточка, затем обычное пояснение.
+    if(/как.*(пройти|пройтись|сделать|получить).*верифика|верифика.*(пройти|получить)/.test(lower)){
+      this._aiPendingVerificationCard = true;
+      return '__VERIFICATION_CARD__';
+    }
+
+    // Пользователь продолжает тему верификации.
+    if(/(что будет|если не|не пройти|без.*верифика|без.*значка|можно.*вывод|вывод.*без)/.test(lower)
+       && (previousUserText.includes('верифика') || previousUserText.includes('значок'))){
+      return 'Если не пройти верификацию — значка не будет, а без него заявку на вывод отклоняют, и лимиты новичка остаются. То есть заработать и держать деньги на балансе можно, а вывести — нет.\n\nПройти просто:\n1. «Верификация» или «Кошелёк» в приложении\n2. Выбери способ — СБП/карта, ЮMoney или Stars\n3. Пополни на 1000 ₽ одним платежом — деньги остаются на балансе, это не комиссия\n\nПосле зачисления значок ставится сам.';
+    }
+
+    // Мошенничество/спор.
+    if(/обман|обманули|мошенн|скам|кинули|не получил|товар не приш|продавец пропал|покупатель пропал/.test(lower)){
+      return 'Если тебя обманули внутри сделки — не закрывай её и не переводи деньги напрямую. Открой нужную сделку в разделе «Сделки», сохрани переписку и отправь сюда код сделки и коротко опиши, что произошло. Я подскажу, что делать дальше.';
+    }
+
+    // Сделки.
+    if(/как.*(создать|сделать).*(сделк)|создать сделк|нов(ая|ую) сделк|сделк(а|у)/.test(lower)){
+      return 'Чтобы создать сделку, нажми «+» внизу приложения. Выбери роль продавца или покупателя, укажи второго участника, товар и сумму. Перед отправкой проверь данные — после создания сделка появится в разделе «Сделки».';
+    }
+    if(/принять|приглашен|заявк/.test(lower)){
+      return 'Открой «Сделки» и перейди к приглашениям. Проверь второго участника, товар, описание и сумму. Если всё верно — нажми «Принять». Если данные не подходят — «Отклонить».';
+    }
+
+    // Баланс и пополнение.
+    if(/баланс|пополни|пополнен|деньг/.test(lower)){
+      return `Сейчас на твоём балансе ${fmt(this.user.balance)} ₽. Пополнение открывается кнопкой «Пополнить» на главной странице.`;
+    }
+    if(/комисс|процент/.test(lower)){
+      return `Комиссия сделки в текущей версии сервиса — ${COMMISSION_RATE*100}% от суммы продавца. Точная сумма показывается до подтверждения сделки.`;
+    }
+
+    // Вывод.
+    if(/вывод|вывести|снять|получить деньги/.test(lower)){
+      if((this.user.level||0) < 1){
+        return 'Для вывода сначала нужна верификация аккаунта. Открой «Верификация» или «Кошелёк», пройди её, и после зачисления 1000 ₽ значок появится автоматически.';
+      }
+      return 'Открой «Кошелёк» → «Вывести», укажи сумму и выбери доступный способ получения. Перед отправкой заявки проверь реквизиты.';
+    }
+
+    if(/верифика|подтверд|уровен|значок/.test(lower)){
+      return `Сейчас у тебя: ${this.user.verified ? 'верификация подтверждена' : 'верификация не подтверждена'}, уровень ${this.user.level||0}.`;
+    }
+
+    return 'Расскажи подробнее, что случилось. Могу помочь со сделкой, верификацией, балансом, пополнением, выводом или спорной ситуацией.';
+  },
+  // ===== ONBOARDING =====
+  onboardingSlides: [
+    {
+      art: 'duck', pose: 'wave',
+      title(){ return `Привет, ${app.user ? app.user.username : 'друг'}!`; },
+      text: 'Это Playerok — маркет игровых товаров прямо в Telegram. Аккаунты, ключи, прокачка и услуги: всё в одном приложении.'
+    },
+    {
+      art: 'duck', pose: 'umbrella',
+      title(){ return 'Сделка под защитой'; },
+      text: 'Деньги покупателя лежат у сервиса, а не у продавца. Продавец получит их только после того, как вы подтвердите, что товар пришёл.'
+    },
+    {
+      art: 'glow',
+      title(){ return 'Баланс и бонусы'; },
+      text: 'Пополняйте баланс картой, СБП или криптой — и получайте +30% бонусом к каждому пополнению.'
+    },
+    {
+      art: 'duck', pose: 'plain',
+      title(){ return 'Погнали'; },
+      text: 'Введите код от продавца или создайте свою сделку. Если что-то пойдёт не так — поддержка на связи прямо в приложении.'
+    }
+  ],
+  obIndex: 0,
+
+  openOnboarding(){
+    this.obIndex = 0;
+    this.renderOnboarding();
+    const onboardingScreen = document.getElementById('onboardingScreen');
+    if (onboardingScreen) onboardingScreen.classList.add('show');
+  },
+  closeOnboarding(){
+    const onboardingScreen = document.getElementById('onboardingScreen');
+    if (onboardingScreen) onboardingScreen.classList.remove('show');
+  },
+  async skipOnboarding(){
+    this.closeOnboarding();
+    if(this.user && !this.user.onboardingSeen){
+      this.user.onboardingSeen = true;
+      await this.saveUser();
+    }
+  },
+  async nextOnboarding(){
+    if(this.obIndex >= this.onboardingSlides.length - 1){
+      await this.skipOnboarding();
+      return;
+    }
+    this.obIndex++;
+    this.renderOnboarding();
+  },
+  prevOnboardingSlide(){
+    if(this.obIndex <= 0) return;
+    this.obIndex--;
+    this.renderOnboarding();
+  },
+  async maybeShowOnboarding(){
+    if(this.user && !this.user.onboardingSeen){
+      const onboardingScreen = document.getElementById('onboardingScreen');
+      if (onboardingScreen) this.openOnboarding();
+    }
+  },
+  renderOnboarding(){
+    const track = document.getElementById('onbTrack');
+    const dots = document.getElementById('onbDots');
+    if(!track || !dots) return;
+    if(!track.dataset.built){
+      track.innerHTML = this.onboardingSlides.map((s,i)=>{
+        let art = '';
+        if(s.art === 'glow'){
+          art = `<div class="onb-art glow"></div>`;
+        } else if(s.pose === 'umbrella'){
+          art = `<div class="onb-art"><span class="duck">🦆</span><span class="deco" style="top:2px;left:8px">☂️</span><span class="deco" style="top:6px;right:6px;font-size:20px">🕷️</span></div>`;
+        } else if(s.pose === 'wave'){
+          art = `<div class="onb-art"><span class="duck">🦆</span><span class="deco" style="bottom:6px;left:4px;font-size:22px">👋</span></div>`;
+        } else {
+          art = `<div class="onb-art"><span class="duck">🦆</span></div>`;
+        }
+        return `<div class="onb-slide" data-i="${i}">
+          ${art}
+          <div class="onb-title" id="onbTitle${i}"></div>
+          <div class="onb-text">${escapeHtml(s.text)}</div>
+        </div>`;
+      }).join('');
+      track.dataset.built = '1';
+      this.bindOnboardingSwipe();
+    }
+    this.onboardingSlides.forEach((s,i)=>{
+      const titleEl = document.getElementById('onbTitle'+i);
+      if(titleEl) titleEl.textContent = typeof s.title === 'function' ? s.title() : s.title;
+    });
+    track.querySelectorAll('.onb-slide').forEach(el=>{
+      const i = Number(el.dataset.i);
+      el.classList.toggle('active', i === this.obIndex);
+      el.classList.toggle('prev', i < this.obIndex);
+    });
+    dots.innerHTML = this.onboardingSlides.map((s,i)=>`<div class="onb-dot ${i===this.obIndex?'active':''}"></div>`).join('');
+    const isLast = this.obIndex === this.onboardingSlides.length - 1;
+    document.getElementById('onbNextBtn').textContent = isLast ? 'Понятно' : 'Дальше';
+    document.getElementById('onbSkipBtn').style.display = isLast ? 'none' : 'block';
+  },
+  bindOnboardingSwipe(){
+    const track = document.getElementById('onbTrack');
+    if(!track || track.dataset.swipeBound) return;
+    track.dataset.swipeBound = '1';
+    let sx = 0, sy = 0, tracking = false;
+    track.addEventListener('touchstart', e=>{
+      const t = e.touches[0]; sx = t.clientX; sy = t.clientY; tracking = true;
+    }, {passive:true});
+    track.addEventListener('touchend', e=>{
+      if(!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if(Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      if(dx < 0) this.nextOnboarding(); else this.prevOnboardingSlide();
+    }, {passive:true});
+  },
+
+  // ===== PROMO / BALANCE CAROUSEL =====
+  promoSlides: [
+    {
+      kicker:'Безопасная сделка', title:'Деньги под защитой',
+      sub:'Продавец получает оплату только после подтверждения покупателя.',
+      art:`<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="pgShield" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8fa8ff"/><stop offset="1" stop-color="#4a63d1"/>
+          </linearGradient>
+        </defs>
+        <path d="M50 6 L84 19 V45 C84 68 69 85 50 94 C31 85 16 68 16 45 V19 Z" fill="url(#pgShield)"/>
+        <path d="M50 6 L84 19 V45 C84 68 69 85 50 94 C31 85 16 68 16 45 V19 Z" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+        <path d="M35 50 L45 60 L67 37" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>`,
+      action:'Создать', onclick:"app.openNewDeal()"
+    },
+    {
+      kicker:'Удобный баланс', title:'Оплата без суеты',
+      sub:'Пополнение и вывод собраны в одном спокойном понятном экране.',
+      art:`<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="pgWallet" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#4a3a2a"/><stop offset="1" stop-color="#241b10"/>
+          </linearGradient>
+          <linearGradient id="pgCoin" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ffe1a0"/><stop offset="1" stop-color="#f2b84b"/>
+          </linearGradient>
+        </defs>
+        <circle cx="30" cy="20" r="10" fill="url(#pgCoin)" opacity=".85"/>
+        <circle cx="50" cy="12" r="6.5" fill="url(#pgCoin)" opacity=".65"/>
+        <rect x="12" y="34" width="76" height="50" rx="13" fill="url(#pgWallet)" stroke="rgba(255,255,255,.15)"/>
+        <rect x="12" y="34" width="76" height="17" rx="8.5" fill="rgba(255,255,255,.08)"/>
+        <circle cx="70" cy="60" r="11" fill="url(#pgCoin)"/>
+      </svg>`,
+      action:'Открыть', onclick:"app.go('home')"
+    },
+    {
+      kicker:'Поддержка рядом', title:'Не останетесь одни',
+      sub:'Чат сделки и помощь команды всегда доступны прямо в приложении.',
+      art:`<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="pgBub1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8fe9d1"/><stop offset="1" stop-color="#34d399"/>
+          </linearGradient>
+          <linearGradient id="pgBub2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#c4aeff"/><stop offset="1" stop-color="#9b6bf0"/>
+          </linearGradient>
+        </defs>
+        <path d="M16 16h44a10 10 0 0 1 10 10v14a10 10 0 0 1-10 10H42l-13 11v-11h-3a10 10 0 0 1-10-10V26a10 10 0 0 1 10-10Z" fill="url(#pgBub1)"/>
+        <path d="M46 44h32a9 9 0 0 1 9 9v13a9 9 0 0 1-9 9h-2v11l-13-11H46a9 9 0 0 1-9-9V53a9 9 0 0 1 9-9Z" fill="url(#pgBub2)"/>
+      </svg>`,
+      action:'Написать', onclick:"app.openSupportChat()"
+    }
+  ],
+  promoIndex: 0,
+  promoPlaying: true,
+  promoTimer: null,
+
+  renderPromo(){
+    const track = document.getElementById('promoTrack');
+    const bars = document.getElementById('promoBars');
+    if(!track || !bars) return;
+    if(!track.dataset.built){
+      track.innerHTML = this.promoSlides.map((s,i)=>`
+        <div class="promo-slide" data-i="${i}">
+          <div class="promo-glow"></div>
+          <div class="promo-kicker">${escapeHtml(s.kicker)}</div>
+          <div class="promo-title">${escapeHtml(s.title)}</div>
+          <div class="promo-sub">${escapeHtml(s.sub)}</div>
+          <div class="promo-icon-wrap">${s.art}</div>
+          <button class="promo-action" onclick="${s.onclick}">${escapeHtml(s.action)}</button>
+        </div>`).join('');
+      track.dataset.built = '1';
+      bars.innerHTML = this.promoSlides.map((s,i)=>`<div class="promo-bar" data-i="${i}"><div class="promo-bar-fill"></div></div>`).join('')
+        + `<div class="promo-pause" id="promoPause" onclick="app.togglePromoAutoplay()"></div>`;
+      this.bindPromoSwipe();
+      this.startPromoAutoplay();
+    }
+    this.updatePromoUI();
+  },
+  updatePromoUI(){
+    const track = document.getElementById('promoTrack');
+    if(!track) return;
+    track.querySelectorAll('.promo-slide').forEach(el=>{
+      el.classList.toggle('active', Number(el.dataset.i) === this.promoIndex);
+    });
+    track.querySelectorAll('.promo-bar').forEach(el=>{
+      const i = Number(el.dataset.i);
+      const fill = el.querySelector('.promo-bar-fill');
+      if(!fill) return;
+      if(i < this.promoIndex){
+        fill.style.transition = 'none';
+        fill.style.width = '100%';
+      } else if(i > this.promoIndex){
+        fill.style.transition = 'none';
+        fill.style.width = '0%';
+      } else {
+        // current slide's bar
+        if(this.promoPlaying){
+          fill.style.transition = 'none';
+          fill.style.width = '0%';
+          void fill.offsetWidth; // force reflow so the transition below restarts cleanly
+          fill.style.transition = 'width 4.5s linear';
+          fill.style.width = '100%';
+        } else {
+          fill.style.transition = 'none';
+          fill.style.width = '0%';
+        }
+      }
+    });
+    const pause = document.getElementById('promoPause');
+    if(pause){
+      pause.innerHTML = this.promoPlaying
+        ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l14 8-14 8V4z"/></svg>';
+    }
+  },
+  goPromo(i, restart){
+    const n = this.promoSlides.length;
+    this.promoIndex = ((i % n) + n) % n;
+    this.updatePromoUI();
+    if(restart !== false) this.startPromoAutoplay();
+  },
+  nextPromo(){ this.goPromo(this.promoIndex + 1); },
+  prevPromo(){ this.goPromo(this.promoIndex - 1); },
+  startPromoAutoplay(){
+    if(this.promoTimer) clearTimeout(this.promoTimer);
+    if(!this.promoPlaying) return;
+    this.promoTimer = setTimeout(()=>{ this.goPromo(this.promoIndex + 1); }, 4500);
+  },
+  togglePromoAutoplay(){
+    this.promoPlaying = !this.promoPlaying;
+    if(this.promoTimer) clearTimeout(this.promoTimer);
+    this.updatePromoUI();
+    if(this.promoPlaying) this.startPromoAutoplay();
+  },
+  bindPromoSwipe(){
+    const el = document.getElementById('promoCarousel');
+    if(!el || el.dataset.swipeBound) return;
+    el.dataset.swipeBound = '1';
+    let sx = 0, sy = 0, tracking = false;
+    el.addEventListener('touchstart', e=>{
+      const t = e.touches[0]; sx = t.clientX; sy = t.clientY; tracking = true;
+    }, {passive:true});
+    el.addEventListener('touchend', e=>{
+      if(!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if(Math.abs(dx) < 30 || Math.abs(dx) < Math.abs(dy)) return;
+      if(dx < 0) this.nextPromo(); else this.prevPromo();
+    }, {passive:true});
+    let mx = null;
+    el.addEventListener('mousedown', e=>{ mx = e.clientX; });
+    el.addEventListener('mouseup', e=>{
+      if(mx === null) return;
+      const dx = e.clientX - mx; mx = null;
+      if(Math.abs(dx) < 30) return;
+      if(dx < 0) this.nextPromo(); else this.prevPromo();
+    });
+  }
+};
+
+
+function hashCode(s){ let h=0; for(let i=0;i<s.length;i++){ h = (h<<5)-h + s.charCodeAt(i); h|=0; } return h; }
+function dealCode(id){
+  if(!id) return '——————';
+  const h = Math.abs(hashCode(id));
+  return h.toString(36).toUpperCase().padStart(6,'0').slice(0,6);
+}
+function renderInfoCard(card){
+  const steps = (card.steps||[]).map(s=>`
+    <div class="info-card-step">
+      <div class="info-card-num">${s.num}</div>
+      <div>
+        <div class="info-card-step-title">${escapeHtml(s.title)}</div>
+        <div class="info-card-step-sub">${escapeHtml(s.sub)}</div>
+      </div>
+    </div>`).join('');
+  const image = card.image
+    ? `<img src="${escapeHtml(card.image)}" alt="" style="display:block;width:100%;max-height:280px;object-fit:cover;border-radius:14px;margin:0 0 12px">`
+    : '';
+  return `<div class="info-card">
+    ${image}
+    <div class="info-card-title">${escapeHtml(card.title)}</div>
+    <div class="info-card-sub">${escapeHtml(card.subtitle)}</div>
+    ${steps}
+    <div class="info-card-footer">${escapeHtml(card.footer)}</div>
+  </div>`;
+}
+function fmt(n){ return Number(n||0).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+function timeAgo(ts){
+  const diff = Date.now()-ts;
+  const m = Math.floor(diff/60000);
+  if(m<1) return 'сейчас';
+  if(m<60) return m+' мин';
+  const h = Math.floor(m/60);
+  if(h<24) return h+' ч';
+  return Math.floor(h/24)+' д';
+}
+
+window.app = app;
+app.init();
+document.querySelectorAll('#reviewStarsSelect span').forEach(star=>{
+  star.addEventListener('click',()=>app.setReviewRating(star.dataset.rating));
+});
+app.setReviewRating(5);
+const cpInput=document.getElementById('counterpartyInput');
+if(cpInput){
+  cpInput.addEventListener('input',()=>{
+    if(cpInput.value.includes('@')){
+      const pos=cpInput.selectionStart;
+      cpInput.value=cpInput.value.replace(/@+/g,'');
+      cpInput.setSelectionRange(Math.max(0,(pos||0)-1),Math.max(0,(pos||0)-1));
+    }
+  });
+}
+</script>
+
+<script>
+/* Deelo UI reliability patch */
+(function(){
+  function openSupport(){
+    try {
+      if(window.app && typeof window.app.openSupportChat === 'function'){
+        window.app.openSupportChat();
+        return;
+      }
+    } catch(e){ console.error(e); }
+    const detail = document.getElementById('chatDetail');
+    if(detail) detail.classList.add('show');
+  }
+
+  function findText(el){
+    return ((el && el.textContent) || '').replace(/\s+/g,' ').trim().toLowerCase();
+  }
+
+  document.addEventListener('click', function(e){
+    const el = e.target.closest('button,[role="button"],.menu-item,.chat-row,.switch,.switch-row,.profile-row');
+    if(!el) return;
+
+    const text = findText(el);
+    const id = (el.id || '').toLowerCase();
+    const onclick = (el.getAttribute('onclick') || '').toLowerCase();
+
+    // Support: catch every visible support/menu entry.
+    if(text === 'поддержка' || text.includes('поддержка') ||
+       id.includes('support') || onclick.includes('opensupportchat')){
+      if(!text.includes('админ') && !onclick.includes('openadminchat')){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        openSupport();
+        return;
+      }
+    }
+  }, true);
+
+  // Keyboard support for settings rows.
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const el = e.target.closest('.switch-row,[role="switch"]');
+    if(!el) return;
+    const onclick = (el.getAttribute('onclick') || '').match(/toggleSetting\(['"]([^'"]+)['"]\)/i);
+    if(onclick && window.app && typeof window.app.toggleSetting === 'function'){
+      e.preventDefault();
+      window.app.toggleSetting(onclick[1]);
+    }
+  }, true);
+})();
+</script>
+
+
+<script>
+(function(){
+  function bindDeeloControls(){
+    if(!window.app) return;
+    document.querySelectorAll('.chat-row,.menu-item').forEach(function(el){
+      if(el.dataset.supportBoundV4) return;
+      if((el.textContent||'').toLowerCase().includes('поддерж')) {
+        el.dataset.supportBoundV4='1';
+        el.addEventListener('click',function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          window.app.openSupportChat();
+        }, true);
+      }
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bindDeeloControls);
+  else bindDeeloControls();
+  setTimeout(bindDeeloControls,250);
+  setTimeout(bindDeeloControls,1000);
+})();
+</script>
+
+<script>
+/* v6 SETTINGS CONTROLLER — one tap = one state change */
+(function(){
+  const KEYS=['notifyDeals','notifyPayments','notifyWithdrawals','notifyChats'];
+
+  function rowFor(target){
+    return target && target.closest ? target.closest('.settings-toggle-row[data-setting]') : null;
+  }
+
+  function sync(key){
+    if(!window.app || !window.app.user || !KEYS.includes(key)) return;
+    const on=!!window.app.user[key];
+    const sw=document.getElementById('sw-'+key);
+    if(sw){
+      sw.classList.toggle('on',on);
+      sw.setAttribute('aria-checked',on?'true':'false');
+      sw.dataset.state=on?'on':'off';
+    }
+  }
+
+  document.addEventListener('click',function(e){
+    const row=rowFor(e.target);
+    if(!row || !window.app || typeof window.app.toggleSetting!=='function') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const key=row.getAttribute('data-setting');
+    window.app.toggleSetting(key).then(function(){sync(key);});
+  },true);
+
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter' && e.key!==' ') return;
+    const row=rowFor(e.target);
+    if(!row || !window.app || typeof window.app.toggleSetting!=='function') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const key=row.getAttribute('data-setting');
+    window.app.toggleSetting(key).then(function(){sync(key);});
+  },true);
+
+  function syncAll(){
+    if(window.app && window.app.user) KEYS.forEach(sync);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',syncAll);
+  else syncAll();
+  setTimeout(syncAll,100);
+  setTimeout(syncAll,500);
+})();
+</script>
+
+
+<script>
+/* v6 CURRENCY CONTROLLER */
+(function(){
+  function open(){
+    if(window.app && typeof window.app.openHintCurrencyModal==='function'){
+      window.app.openHintCurrencyModal();
+    }
+  }
+  document.addEventListener('click',function(e){
+    const row=e.target.closest && e.target.closest('.currency-setting-row');
+    if(!row) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    open();
+  },true);
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter' && e.key!==' ') return;
+    const row=e.target.closest && e.target.closest('.currency-setting-row');
+    if(!row) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    open();
+  },true);
+})();
+</script>
+
+
+<div class="modal-overlay" id="notificationsModal" onclick="if(event.target===this)app.closeNotifications()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Уведомления</div>
+      <button class="modal-close" onclick="app.closeNotifications()">×</button>
+    </div>
+    <div class="notif-list" id="notificationsList"></div>
+    <button class="notif-close-btn" onclick="app.closeNotifications()">Закрыть</button>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="onb-overlay" id="onboardingScreen">
+  <div class="onb-top">
+    <button class="onb-close" onclick="app.skipOnboarding()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      Закрыть
+    </button>
+  </div>
+  <div class="onb-track" id="onbTrack"></div>
+  <div class="onb-dots" id="onbDots"></div>
+  <div class="onb-bottom">
+    <button class="onb-next" id="onbNextBtn" onclick="app.nextOnboarding()">Дальше</button>
+    <button class="onb-skip" id="onbSkipBtn" onclick="app.skipOnboarding()">Пропустить</button>
+  </div>
+</div>
+
+
+<script>
+/* v7 PROMO CAROUSEL WATCHDOG — if the "Оплата без суеты" style cards
+   ever fail to render (e.g. an unrelated error interrupted init()),
+   this notices the empty carousel and fills it in. renderPromo() is
+   safe to call repeatedly — it only builds the slides once. */
+(function(){
+  function ensurePromo(){
+    if(!window.app || typeof window.app.renderPromo !== 'function') return;
+    const track = document.getElementById('promoTrack');
+    if(track && !track.dataset.built){
+      try{ window.app.renderPromo(); }catch(e){ console.error('promo watchdog:', e); }
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', ensurePromo);
+  else ensurePromo();
+  setTimeout(ensurePromo, 300);
+  setTimeout(ensurePromo, 1000);
+  setTimeout(ensurePromo, 2500);
+})();
+</script>
+
+<script>
+/* v7 NOTIFICATION BELL */
+(function(){
+  document.addEventListener('click',function(e){
+    const el=e.target.closest && e.target.closest(
+      '#notificationBell,.notification-bell,.notif-bell,[aria-label="Уведомления"],[title="Уведомления"]'
+    );
+    if(!el || !window.app || typeof window.app.openNotifications!=='function') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    window.app.openNotifications();
+  },true);
+})();
+</script>
+
+</body>
+</html>
