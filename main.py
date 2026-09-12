@@ -737,7 +737,13 @@ def create_app() -> web.Application:
     app = web.Application()
 
     app.router.add_get("/", index_handler)
-    app.router.add_get("/verification.txt", verification_handler)
+    app.router.add_get(
+    "/verification.txt",
+    lambda request: web.Response(
+        text="b0ffe7ed5c8e892dbde8c1f6b4f639b0d11c1bc7",
+        content_type="text/plain",
+    ),
+)
     app.router.add_get("/index.html", index_handler)
     app.router.add_get("/app", index_handler)
     app.router.add_get("/app/", index_handler)
