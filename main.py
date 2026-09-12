@@ -735,7 +735,8 @@ async def verification_handler(request: web.Request):
 
 def create_app() -> web.Application:
     app = web.Application()
-   log.info("TOME VERIFY ROUTE REGISTERED")
+    log.info("TOME VERIFY ROUTE REGISTERED")
+
     app.router.add_get("/", index_handler)
     app.router.add_get("/verification.txt", verification_handler)
     app.router.add_get("/index.html", index_handler)
