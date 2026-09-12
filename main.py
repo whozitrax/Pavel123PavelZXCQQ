@@ -737,40 +737,6 @@ def create_app() -> web.Application:
     app = web.Application()
 
     app.router.add_get("/", index_handler)
-    app.router.add_get(
-    "/verification.txt",
-    lambda request: web.Response(
-        text="b0ffe7ed5c8e892dbde8c1f6b4f639b0d11c1bc7",
-        content_type="text/plain",
-    ),
-)
-    app.router.add_get("/index.html", index_handler)
-    app.router.add_get("/app", index_handler)
-    app.router.add_get("/app/", index_handler)
-    app.router.add_get("/api/store/{key:.*}", store_get)
-    app.router.add_post("/api/store/{key:.*}", store_set)
-    app.router.add_delete("/api/store/{key:.*}", store_delete)
-    app.router.add_get("/api/store-list", store_list)
-    app.router.add_post("/api/deals/create", api_create_deal)
-    app.router.add_post("/api/deals/respond", api_respond_deal)
-    app.router.add_post("/api/request-contact", api_request_contact)
-
-    SimpleRequestHandler(
-        dispatcher=dp,
-        bot=bot,
-    ).register(app, path=WEBHOOK_PATH)
-
-    setup_application(app, dp, bot=bot)
-
-    dp.startup.register(on_startup)
-    dp.shutdown.register(on_shutdown)
-
-    return app
-
-def create_app() -> web.Application:
-    app = web.Application()
-
-    app.router.add_get("/", index_handler)
     app.router.add_get("/verification.txt", verification_handler)
     app.router.add_get("/index.html", index_handler)
     app.router.add_get("/app", index_handler)
