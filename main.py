@@ -686,6 +686,7 @@ async def store_list(request: web.Request):
 
 async def index_handler(request: web.Request):
     global _index_cache
+
     # Some hosting panels launch main.py from a different working directory.
     # Search the common layouts instead of assuming cwd.
     candidates = [
@@ -694,29 +695,79 @@ async def index_handler(request: web.Request):
         Path.cwd() / "index.html",
         Path(__file__).resolve().parent / "index.html",
     ]
+
     index_path = next((p for p in candidates if p.is_file()), None)
+
     if index_path is None:
-        log.error("Mini App index.html not found. __file__=%s cwd=%s", __file__, Path.cwd())
-        return web.Response(status=500, text="Mini App files are missing on the server. Upload the web/ folder with index.html.")
-    # Cache by mtime so an updated index.html is picked up without restarting.
+        log.error(
+            "Mini App index.html not found. __file__=%s cwd=%s",
+            __file__,
+            Path.cwd(),
+        )
+        return web.Response(
+            status=500,
+            text="Mini App files are missing on the server. Upload the web/ folder with index.html.",
+        )
+
     try:
         mtime = index_path.stat().st_mtime_ns
     except OSError:
         mtime = 0
-    if not isinstance(_index_cache, tuple) or _index_cache[0] != mtime:
-        _index_cache = (mtime, index_path.read_text(encoding="utf-8"))
-    return web.Response(text=_index_cache[1], content_type="text/html")
 
-    async def verification_handler(request: web.Request):
-    verification_file = Path(__file__).parent / "verification.txt"
+    if not isinstance(_index_cache, tuple) or _index_cache[0] != mtime:
+        _index_cache = (
+            mtime,
+            index_path.read_text(encoding="utf-8"),
+        )
+
+    return web.Response(
+        text=_index_cache[1],
+        content_type="text/html",
+    )
+
+
+async def verification_handler(request: web.Request):
+    verification_file = Path(__file__).resolve().parent / "verification.txt"
 
     if not verification_file.is_file():
-        return web.Response(status=404, text="Not Found")
+        return web.Response(
+            status=404,
+            text="Not Found",
+        )
 
     return web.Response(
         text=verification_file.read_text(encoding="utf-8").strip(),
         content_type="text/plain",
     )
+
+
+def create_app() -> web.Application:
+    app = web.Application()
+
+    app.router.add_get("/", index_handler)
+    app.router.add_get("/verification.txt", verification_handler)
+    app.router.add_get("/index.html", index_handler)
+    app.router.add_get("/app", index_handler)
+    app.router.add_get("/app/", index_handler)
+    app.router.add_get("/api/store/{key:.*}", store_get)
+    app.router.add_post("/api/store/{key:.*}", store_set)
+    app.router.add_delete("/api/store/{key:.*}", store_delete)
+    app.router.add_get("/api/store-list", store_list)
+    app.router.add_post("/api/deals/create", api_create_deal)
+    app.router.add_post("/api/deals/respond", api_respond_deal)
+    app.router.add_post("/api/request-contact", api_request_contact)
+
+    SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+    ).register(app, path=WEBHOOK_PATH)
+
+    setup_application(app, dp, bot=bot)
+
+    dp.startup.register(on_startup)
+    dp.shutdown.register(on_shutdown)
+
+    return app
 
 def create_app() -> web.Application:
     app = web.Application()
