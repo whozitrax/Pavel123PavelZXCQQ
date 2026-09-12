@@ -707,11 +707,22 @@ async def index_handler(request: web.Request):
         _index_cache = (mtime, index_path.read_text(encoding="utf-8"))
     return web.Response(text=_index_cache[1], content_type="text/html")
 
+    async def verification_handler(request: web.Request):
+    verification_file = Path(__file__).parent / "verification.txt"
+
+    if not verification_file.is_file():
+        return web.Response(status=404, text="Not Found")
+
+    return web.Response(
+        text=verification_file.read_text(encoding="utf-8").strip(),
+        content_type="text/plain",
+    )
 
 def create_app() -> web.Application:
     app = web.Application()
 
     app.router.add_get("/", index_handler)
+    app.router.add_get("/verification.txt", verification_handler)
     app.router.add_get("/index.html", index_handler)
     app.router.add_get("/app", index_handler)
     app.router.add_get("/app/", index_handler)
